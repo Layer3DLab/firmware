@@ -957,26 +957,16 @@ static void homeaxis(int axis) {
   current_position[axis] = 0;
   plan_set_position(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS], current_position[J_AXIS], current_position[E_AXIS]);
   destination[axis] = -home_retract_mm(axis) * axis_home_dir;
-  if (axis==J_AXIS)
-  {
-    SERIAL_ECHO("homing j dest: ");
-    SERIAL_ECHOLN(destination[axis]);
-  }
   plan_buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[J_AXIS],  destination[E_AXIS], feedrate/60, active_extruder);
   st_synchronize();
 
   destination[axis] = 2*home_retract_mm(axis) * axis_home_dir;
-  if (axis==J_AXIS)
-  {
-    SERIAL_ECHO("homing j dest: ");
-    SERIAL_ECHOLN(destination[axis]);
-  }
 #ifdef DELTA
     feedrate = homing_feedrate[axis]/10;
-	if (axis == J_AXIS)
-	{
-	  feedrate = homing_feedrate[axis]/2;
-	}
+    if (axis == J_AXIS)
+    {
+      feedrate = homing_feedrate[axis]/2;
+    }
 #else
     feedrate = homing_feedrate[axis]/2 ;
 #endif
@@ -2805,16 +2795,6 @@ void get_arc_coordinates()
 
 void clamp_to_software_endstops(float target[NUM_AXIS])
 {
-SERIAL_ECHOLN("target[i]:");
-SERIAL_ECHOLN(target[0]);
-SERIAL_ECHOLN(target[1]);
-SERIAL_ECHOLN(target[2]);
-SERIAL_ECHOLN(target[3]);
-SERIAL_ECHOLN("max_pos[i]:");
-SERIAL_ECHOLN(max_pos[0]);
-SERIAL_ECHOLN(max_pos[1]);
-SERIAL_ECHOLN(max_pos[2]);
-SERIAL_ECHOLN(max_pos[3]);
   if (min_software_endstops) {
     if (target[X_AXIS] < min_pos[X_AXIS]) target[X_AXIS] = min_pos[X_AXIS];
     if (target[Y_AXIS] < min_pos[Y_AXIS]) target[Y_AXIS] = min_pos[Y_AXIS];
@@ -2859,14 +2839,7 @@ void calculate_delta(float cartesian[3])
 
 void prepare_move()
 {
-// jf Delete
-//  SERIAL_ECHO("destination[J_AXIS]: ");
-//  SERIAL_ECHOLN(destination[J_AXIS]);
-//  SERIAL_ECHO("current_position[J_AXIS]: ");
-//  SERIAL_ECHOLN(current_position[J_AXIS]);
   clamp_to_software_endstops(destination);
-//  SERIAL_ECHO("destination[J_AXIS] after: ");
-//  SERIAL_ECHOLN(destination[J_AXIS]);
 
   previous_millis_cmd = millis();
 #ifdef DELTA
