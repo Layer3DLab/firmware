@@ -129,6 +129,14 @@ void manage_inactivity();
   #define disable_z() ;
 #endif
 
+#if defined(J_ENABLE_PIN) && J_ENABLE_PIN > -1
+  #define  enable_j() WRITE(J_ENABLE_PIN, J_ENABLE_ON)
+  #define disable_j() WRITE(J_ENABLE_PIN,!J_ENABLE_ON)
+#else
+  #define enable_j() ;
+  #define disable_j() ;
+#endif
+
 #if defined(E0_ENABLE_PIN) && (E0_ENABLE_PIN > -1)
   #define enable_e0() WRITE(E0_ENABLE_PIN, E_ENABLE_ON)
   #define disable_e0() WRITE(E0_ENABLE_PIN,!E_ENABLE_ON)
@@ -154,7 +162,7 @@ void manage_inactivity();
 #endif
 
 
-enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, E_AXIS=3};
+enum AxisEnum {X_AXIS=0, Y_AXIS=1, Z_AXIS=2, J_AXIS=3, E_AXIS=4};
 
 
 void FlushSerialRequestResend();
@@ -190,12 +198,12 @@ extern bool axis_relative_modes[];
 extern int feedmultiply;
 extern int extrudemultiply; // Sets extrude multiply factor (in percent)
 extern float current_position[NUM_AXIS] ;
-extern float add_homeing[3];
+extern float add_homeing[4];
 #ifdef DELTA
-extern float endstop_adj[3];
+extern float endstop_adj[4];
 #endif
-extern float min_pos[3];
-extern float max_pos[3];
+extern float min_pos[4];
+extern float max_pos[4];
 extern int fanSpeed;
 #ifdef BARICUDA
 extern int ValvePressure;

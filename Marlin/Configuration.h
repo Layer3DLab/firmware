@@ -29,6 +29,7 @@
 // 33 = RAMPS 1.3 / 1.4 (Power outputs: Extruder, Fan, Bed)
 // 34 = RAMPS 1.3 / 1.4 (Power outputs: Extruder0, Extruder1, Bed)
 // 35 = RAMPS 1.3 / 1.4 (Power outputs: Extruder, Fan, Fan)
+// 36 = RAMPS 1.3 / 1.4 (Power outputs: Extruder0, Extruder1, Fan, Bed)
 // 4  = Duemilanove w/ ATMega328P pin assignment
 // 5  = Gen6
 // 51 = Gen6 deluxe
@@ -55,7 +56,7 @@
 // 21 = Elefu Ra Board (v3)
 
 #ifndef MOTHERBOARD
-#define MOTHERBOARD 34
+#define MOTHERBOARD 36
 #endif
 
 // Define this to set a custom name for your generic Mendel,
@@ -167,7 +168,7 @@
 #define HEATER_0_MAXTEMP 240
 #define HEATER_1_MAXTEMP 240
 #define HEATER_2_MAXTEMP 240
-#define BED_MAXTEMP 120
+#define BED_MAXTEMP 100
 
 // If your bed has low resistance e.g. .6 ohm and throws the fuse you can duty cycle it to reduce the
 // average current. The value should be an integer and the heat bed will be turned on for 1 interval of
@@ -228,7 +229,7 @@
 // all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
 // setting this to anything other than 255 enables a form of PWM to the bed just like HEATER_BED_DUTY_CYCLE_DIVIDER did,
 // so you shouldn't use it unless you are OK with PWM on your bed.  (see the comment on enabling PIDTEMPBED)
-#define MAX_BED_POWER 150 // limits duty cycle to bed; 255=full current
+#define MAX_BED_POWER 125 // limits duty cycle to bed; 255=full current
 
 #ifdef PIDTEMPBED
 // TRITIUM MARK II 
@@ -286,18 +287,22 @@
   #define ENDSTOPPULLUP_XMAX
   #define ENDSTOPPULLUP_YMAX
   #define ENDSTOPPULLUP_ZMAX
+  #define ENDSTOPPULLUP_JMAX
   #define ENDSTOPPULLUP_XMIN
   #define ENDSTOPPULLUP_YMIN
   #define ENDSTOPPULLUP_ZMIN
+  #define ENDSTOPPULLUP_JMIN
 #endif
 
 // The pullups are needed if you directly connect a mechanical endswitch between the signal and ground pins.
 const bool X_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Y_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 const bool Z_MIN_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
+const bool J_MIN_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool X_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Y_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
 const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of the endstop.
+const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic of the endstop.
 
 // deltas never have min endstops
 #define DISABLE_MIN_ENDSTOPS
@@ -311,17 +316,20 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #define X_ENABLE_ON 0
 #define Y_ENABLE_ON 0
 #define Z_ENABLE_ON 0
+#define J_ENABLE_ON 0
 #define E_ENABLE_ON 0 // For all extruders
 
 // Disables axis when it's not being used.
 #define DISABLE_X false
 #define DISABLE_Y false
 #define DISABLE_Z false
+#define DISABLE_J true
 #define DISABLE_E false // For all extruders
 
 #define INVERT_X_DIR false // DELTA does not invert
 #define INVERT_Y_DIR false
 #define INVERT_Z_DIR false
+#define INVERT_J_DIR false
 
 #define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
@@ -333,6 +341,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #define X_HOME_DIR 1
 #define Y_HOME_DIR 1
 #define Z_HOME_DIR 1
+#define J_HOME_DIR -1
 
 #define min_software_endstops true // If true, axis won't move to coordinates less than HOME_POS.
 #define max_software_endstops true  // If true, axis won't move to coordinates greater than the defined lengths below.
@@ -344,10 +353,13 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 #define Y_MIN_POS -170
 #define Z_MAX_POS MANUAL_Z_HOME_POS
 #define Z_MIN_POS 0
+#define J_MAX_POS 330
+#define J_MIN_POS 0
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
 #define Y_MAX_LENGTH (Y_MAX_POS - Y_MIN_POS)
 #define Z_MAX_LENGTH (Z_MAX_POS - Z_MIN_POS)
+#define J_MAX_LENGTH (J_MAX_POS - J_MIN_POS)
 
 // The position of the homing switches
 //#define MANUAL_HOME_POSITIONS  // If defined, MANUAL_*_HOME_POS below will be used
@@ -359,19 +371,20 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // For deltabots this means top and center of the cartesian print volume.
 #define MANUAL_X_HOME_POS 0
 #define MANUAL_Y_HOME_POS 0
-#define MANUAL_Z_HOME_POS 263.7 //267 //288.25 // For delta: Distance between nozzle and print surface after homing.
+#define MANUAL_Z_HOME_POS 271 //267 //288.25 // For delta: Distance between nozzle and print surface after homing.
+#define MANUAL_J_HOME_POS 0
 
 //// MOVEMENT SETTINGS
-#define NUM_AXIS 4 // The axis order in all axis related arrays is X, Y, Z, E
+#define NUM_AXIS 5 // The axis order in all axis related arrays is X, Y, Z, J, E
 
 // delta homing speeds must be the same on xyz
-#define HOMING_FEEDRATE {200*60, 200*60, 200*60, 0}  // set the homing speeds (mm/min)
+#define HOMING_FEEDRATE {200*60, 200*60, 200*60, 500, 0}  // set the homing speeds (mm/min)
 
 // default settings
 // delta speeds must be the same on xyz
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {64, 64, 64, 77}  // default steps per unit for Kossel (GT2, 20 tooth)
-#define DEFAULT_MAX_FEEDRATE          {500, 500, 500, 25}    // (mm/sec)
-#define DEFAULT_MAX_ACCELERATION      {1000,1000,1000,9000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {64, 64, 64, 2*125.94, 77}  // default steps per unit for Kossel (GT2, 20 tooth)
+#define DEFAULT_MAX_FEEDRATE          {500, 500, 500, 500, 25}    // (mm/sec)
+#define DEFAULT_MAX_ACCELERATION      {1000,1000,1000,1000,9000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
 #define DEFAULT_ACCELERATION          3000    // X, Y, Z and E max acceleration in mm/s^2 for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000   // X, Y, Z and E max acceleration in mm/s^2 for retracts
@@ -385,6 +398,7 @@ const bool Z_MAX_ENDSTOP_INVERTING = true; // set to true to invert the logic of
 // The speed change that does not require acceleration (i.e. the software might assume it can be done instantaneously)
 #define DEFAULT_XYJERK                20.0    // (mm/sec)
 #define DEFAULT_ZJERK                 20.0    // (mm/sec) Must be same as XY for delta
+#define DEFAULT_JJERK                 20.0    // (mm/sec)
 #define DEFAULT_EJERK                 5.0    // (mm/sec)
 
 //===========================================================================

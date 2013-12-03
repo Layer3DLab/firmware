@@ -55,6 +55,7 @@ void Config_StoreSettings()
   EEPROM_WRITE_VAR(i,minsegmenttime);
   EEPROM_WRITE_VAR(i,max_xy_jerk);
   EEPROM_WRITE_VAR(i,max_z_jerk);
+  EEPROM_WRITE_VAR(i,max_j_jerk);
   EEPROM_WRITE_VAR(i,max_e_jerk);
   EEPROM_WRITE_VAR(i,add_homeing);
   #ifdef DELTA
@@ -103,7 +104,8 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR("  M92 X",axis_steps_per_unit[0]);
     SERIAL_ECHOPAIR(" Y",axis_steps_per_unit[1]);
     SERIAL_ECHOPAIR(" Z",axis_steps_per_unit[2]);
-    SERIAL_ECHOPAIR(" E",axis_steps_per_unit[3]);
+    SERIAL_ECHOPAIR(" J",axis_steps_per_unit[3]);
+    SERIAL_ECHOPAIR(" E",axis_steps_per_unit[4]);
     SERIAL_ECHOLN("");
       
     SERIAL_ECHO_START;
@@ -111,17 +113,19 @@ void Config_PrintSettings()
     SERIAL_ECHO_START;
     SERIAL_ECHOPAIR("  M203 X",max_feedrate[0]);
     SERIAL_ECHOPAIR(" Y",max_feedrate[1] ); 
-    SERIAL_ECHOPAIR(" Z", max_feedrate[2] ); 
-    SERIAL_ECHOPAIR(" E", max_feedrate[3]);
+    SERIAL_ECHOPAIR(" Z", max_feedrate[2] );
+    SERIAL_ECHOPAIR(" J", max_feedrate[3]);
+    SERIAL_ECHOPAIR(" E", max_feedrate[4]);
     SERIAL_ECHOLN("");
 
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Maximum Acceleration (mm/s2):");
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M201 X" ,max_acceleration_units_per_sq_second[0] ); 
-    SERIAL_ECHOPAIR(" Y" , max_acceleration_units_per_sq_second[1] ); 
+    SERIAL_ECHOPAIR("  M201 X" ,max_acceleration_units_per_sq_second[0] );
+    SERIAL_ECHOPAIR(" Y" , max_acceleration_units_per_sq_second[1] );
     SERIAL_ECHOPAIR(" Z" ,max_acceleration_units_per_sq_second[2] );
-    SERIAL_ECHOPAIR(" E" ,max_acceleration_units_per_sq_second[3]);
+    SERIAL_ECHOPAIR(" J" ,max_acceleration_units_per_sq_second[3] );
+    SERIAL_ECHOPAIR(" E" ,max_acceleration_units_per_sq_second[4]);
     SERIAL_ECHOLN("");
     SERIAL_ECHO_START;
     SERIAL_ECHOLNPGM("Acceleration: S=acceleration, T=retract acceleration");
@@ -138,6 +142,7 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR(" B" ,minsegmenttime ); 
     SERIAL_ECHOPAIR(" X" ,max_xy_jerk ); 
     SERIAL_ECHOPAIR(" Z" ,max_z_jerk);
+    SERIAL_ECHOPAIR(" J" ,max_j_jerk);
     SERIAL_ECHOPAIR(" E" ,max_e_jerk);
     SERIAL_ECHOLN(""); 
 
@@ -147,6 +152,7 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR("  M206 X",add_homeing[0] );
     SERIAL_ECHOPAIR(" Y" ,add_homeing[1] );
     SERIAL_ECHOPAIR(" Z" ,add_homeing[2] );
+    SERIAL_ECHOPAIR(" J" ,add_homeing[3] );
     SERIAL_ECHOLN("");
 #ifdef DELTA
     SERIAL_ECHO_START;
@@ -155,6 +161,7 @@ void Config_PrintSettings()
     SERIAL_ECHOPAIR("  M666 X",endstop_adj[0] );
     SERIAL_ECHOPAIR(" Y" ,endstop_adj[1] );
     SERIAL_ECHOPAIR(" Z" ,endstop_adj[2] );
+    SERIAL_ECHOPAIR(" J" ,endstop_adj[3] );
     SERIAL_ECHOLN("");
 #endif
 #ifdef PIDTEMP
@@ -195,6 +202,7 @@ void Config_RetrieveSettings()
         EEPROM_READ_VAR(i,minsegmenttime);
         EEPROM_READ_VAR(i,max_xy_jerk);
         EEPROM_READ_VAR(i,max_z_jerk);
+        EEPROM_READ_VAR(i,max_j_jerk);
         EEPROM_READ_VAR(i,max_e_jerk);
         EEPROM_READ_VAR(i,add_homeing);
         #ifdef DELTA
@@ -259,10 +267,11 @@ void Config_ResetDefault()
     mintravelfeedrate=DEFAULT_MINTRAVELFEEDRATE;
     max_xy_jerk=DEFAULT_XYJERK;
     max_z_jerk=DEFAULT_ZJERK;
+    max_j_jerk=DEFAULT_JJERK;
     max_e_jerk=DEFAULT_EJERK;
-    add_homeing[0] = add_homeing[1] = add_homeing[2] = 0;
+    add_homeing[0] = add_homeing[1] = add_homeing[2] = add_homeing[3] = 0;
 #ifdef DELTA
-    endstop_adj[0] = endstop_adj[1] = endstop_adj[2] = 0;
+    endstop_adj[0] = endstop_adj[1] = endstop_adj[2] = endstop_adj[3] = 0;
 #endif
 #ifdef ULTIPANEL
     plaPreheatHotendTemp = PLA_PREHEAT_HOTEND_TEMP;
