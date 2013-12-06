@@ -229,13 +229,17 @@
 // all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
 // setting this to anything other than 255 enables a form of PWM to the bed just like HEATER_BED_DUTY_CYCLE_DIVIDER did,
 // so you shouldn't use it unless you are OK with PWM on your bed.  (see the comment on enabling PIDTEMPBED)
-#define MAX_BED_POWER 125 // limits duty cycle to bed; 255=full current
+#define MAX_BED_POWER 75 // limits duty cycle to bed; 255=full current
 
 #ifdef PIDTEMPBED
+// TRITIUM MARK II 1/8" Glass with aluminum heater, acrylic spacers below melamine
+      #define DEFAULT_bedKp 35.47
+      #define DEFAULT_bedKi 0.38
+      #define DEFAULT_bedKd 830.42
 // TRITIUM MARK II 
-      #define DEFAULT_bedKp 16.6
-      #define DEFAULT_bedKi 2.3
-      #define DEFAULT_bedKd 26.3
+//      #define DEFAULT_bedKp 16.6
+//      #define DEFAULT_bedKi 2.3
+//      #define DEFAULT_bedKd 26.3
 
 //120v 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
 //from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
@@ -331,7 +335,7 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define INVERT_Z_DIR false
 #define INVERT_J_DIR false
 
-#define INVERT_E0_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
+#define INVERT_E0_DIR true   // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E1_DIR false    // for direct drive extruder v9 set to true, for geared extruder set to false
 #define INVERT_E2_DIR false   // for direct drive extruder v9 set to true, for geared extruder set to false
 
@@ -353,7 +357,7 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define Y_MIN_POS -170
 #define Z_MAX_POS MANUAL_Z_HOME_POS
 #define Z_MIN_POS 0
-#define J_MAX_POS 330
+#define J_MAX_POS 360
 #define J_MIN_POS 0
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
@@ -371,7 +375,7 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // For deltabots this means top and center of the cartesian print volume.
 #define MANUAL_X_HOME_POS 0
 #define MANUAL_Y_HOME_POS 0
-#define MANUAL_Z_HOME_POS 271 //267 //288.25 // For delta: Distance between nozzle and print surface after homing.
+#define MANUAL_Z_HOME_POS 268.8 //267 //288.25 // For delta: Distance between nozzle and print surface after homing.
 #define MANUAL_J_HOME_POS 0
 
 //// MOVEMENT SETTINGS

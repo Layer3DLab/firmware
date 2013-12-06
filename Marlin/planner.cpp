@@ -534,7 +534,6 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
 {
   // Calculate the buffer head after we push this byte
   int next_buffer_head = next_block_index(block_buffer_head);
-
   // If the buffer is full: good! That means we are well ahead of the robot. 
   // Rest here until there is room in the buffer.
   while(block_buffer_tail == next_buffer_head)
@@ -672,7 +671,7 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   #ifndef Z_LATE_ENABLE
     if(block->steps_z != 0) enable_z();
   #endif
-  enable_j();
+  if(block->steps_j != 0) enable_j();
 
   // Enable all
   if(block->steps_e != 0)

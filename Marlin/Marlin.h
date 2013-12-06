@@ -179,6 +179,8 @@ void Stop();
 
 bool IsStopped();
 
+void home_all();
+
 void enquecommand(const char *cmd); //put an ascii command at the end of the current buffer.
 void enquecommand_P(const char *cmd); //put an ascii command at the end of the current buffer, read from flash
 void prepare_arc_move(char isclockwise);
