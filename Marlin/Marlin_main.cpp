@@ -252,6 +252,8 @@ const int sensitive_pins[] = SENSITIVE_PINS; // Sensitive pin list for M42
 //Inactivity shutdown variables
 static unsigned long previous_millis_cmd = 0;
 static unsigned long max_inactive_time = 0;
+static unsigned long previous_millis_state = 0;
+const unsigned long state_update_time = 30000;
 static unsigned long stepper_inactive_time = DEFAULT_STEPPER_DEACTIVE_TIME*1000l;
 
 unsigned long starttime=0;
@@ -507,6 +509,7 @@ void loop()
   manage_inactivity();
   checkHitEndstops();
   lcd_update();
+  send_printer_state();
 }
 
 void get_command()
@@ -2989,6 +2992,34 @@ void manage_inactivity()
     }
   #endif  
   check_axes_activity();
+}
+
+void send_printer_state()
+{
+  if( (millis() - previous_millis_state) > state_update_time )
+  {
+    SERIAL_ECHO("{\"state\":{");
+    SERIAL_ECHOPAIR(" \"T0\":",degHotend(0));
+    #if EXTRUDERS > 1
+      SERIAL_ECHOPAIR(", \"T1\":",degHotend(1));
+      #if EXTRUDERS > 2
+        SERIAL_ECHOPAIR(", \"T2\":",degHotend(2));
+      #endif
+    #endif
+    SERIAL_ECHOPAIR(", \"T_bed\":",degBed());
+//    SERIAL_ECHOPAIR(", \"T_chamber\":",
+//    SERIAL_ECHOPAIR(", \"T_electronics\":",
+    SERIAL_ECHOPAIR(", \"X\":",current_position[X_AXIS]);
+    SERIAL_ECHOPAIR(", \"Y\":",current_position[Y_AXIS]);
+    SERIAL_ECHOPAIR(", \"Z\":",current_position[Z_AXIS]);
+    SERIAL_ECHOPAIR(", \"J\":",current_position[J_AXIS]);
+//   SERIAL_ECHOPAIR(", \"E0_loaded\":",
+//   SERIAL_ECHOPAIR(", \"E1_loaded\":",
+//   SERIAL_ECHOPAIR(", \"E0_filament_remaining\":",
+//   SERIAL_ECHOPAIR(", \"E1_filament_remaining\":",
+    SERIAL_ECHOLN("}}");
+    previous_millis_state = millis();
+  }
 }
 
 void kill()
