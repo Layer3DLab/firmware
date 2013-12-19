@@ -169,6 +169,8 @@ void prepare_move();
 void kill();
 void Stop();
 
+void home_all();
+
 bool IsStopped();
 
 void enquecommand(const char *cmd); //put an ascii command at the end of the current buffer.
