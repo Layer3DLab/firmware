@@ -2889,26 +2889,30 @@ void send_printer_state()
 {
   if( (millis() - previous_millis_state) > state_update_time )
   {
+  // {"state":{"t":{"ext1":#,"ext2":#,"bed":#},"pos":{"X":#,"Y":#,"Z":#,"J":#},
+  //  "E0_remaining":#,"E1_remaining":#}}
     SERIAL_ECHO("{\"state\":{");
-    SERIAL_ECHOPAIR(" \"T0\":",degHotend(0));
+    SERIAL_ECHO("\"t\":{");
+    SERIAL_ECHOPAIR("\"ext1\":",degHotend(0));
     #if EXTRUDERS > 1
-      SERIAL_ECHOPAIR(", \"T1\":",degHotend(1));
+      SERIAL_ECHOPAIR(",\"ext2\":",degHotend(1));
       #if EXTRUDERS > 2
-        SERIAL_ECHOPAIR(", \"T2\":",degHotend(2));
+        SERIAL_ECHOPAIR(",\"ext3\":",degHotend(2));
       #endif
     #endif
-    SERIAL_ECHOPAIR(", \"T_bed\":",degBed());
+    SERIAL_ECHOPAIR(",\"bed\":",degBed());
+    SERIAL_ECHO("}"); // End t
 //    SERIAL_ECHOPAIR(", \"T_chamber\":",
 //    SERIAL_ECHOPAIR(", \"T_electronics\":",
-    SERIAL_ECHOPAIR(", \"X\":",current_position[X_AXIS]);
-    SERIAL_ECHOPAIR(", \"Y\":",current_position[Y_AXIS]);
-    SERIAL_ECHOPAIR(", \"Z\":",current_position[Z_AXIS]);
-    SERIAL_ECHOPAIR(", \"J\":",current_position[J_AXIS]);
-//   SERIAL_ECHOPAIR(", \"E0_loaded\":",
-//   SERIAL_ECHOPAIR(", \"E1_loaded\":",
+    SERIAL_ECHO("\"pos\":{");
+    SERIAL_ECHOPAIR("\"X\":",current_position[X_AXIS]);
+    SERIAL_ECHOPAIR(",\"Y\":",current_position[Y_AXIS]);
+    SERIAL_ECHOPAIR(",\"Z\":",current_position[Z_AXIS]);
+    SERIAL_ECHOPAIR(",\"J\":",current_position[J_AXIS]);
+    SERIAL_ECHO("}"); // End pos
 //   SERIAL_ECHOPAIR(", \"E0_filament_remaining\":",
 //   SERIAL_ECHOPAIR(", \"E1_filament_remaining\":",
-    SERIAL_ECHOLN("}}");
+    SERIAL_ECHOLN("}"); // End state
     previous_millis_state = millis();
   }
 }
@@ -3046,6 +3050,7 @@ bool setTargetedHotend(int code){
   }
   return false;
 }
+
 
 void home_all()
 {
