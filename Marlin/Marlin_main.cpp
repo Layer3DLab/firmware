@@ -1543,7 +1543,7 @@ void process_commands()
       setWatch();
       break;
     case 140: // M140 set bed temp
-      if (code_seen('S')) setTargetBed(code_value());
+      //if (code_seen('S')) setTargetBed(code_value());
       break;
     case 105 : // M105
       if(setTargetedHotend(105)){
@@ -1692,13 +1692,13 @@ void process_commands()
       break;
     case 190: // M190 - Wait for bed heater to reach target.
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-        LCD_MESSAGEPGM(MSG_BED_HEATING);
+        /**LCD_MESSAGEPGM(MSG_BED_HEATING);
         if (code_seen('S')) {
-          setTargetBed(code_value());
-          CooldownNoWait = true;
+          //setTargetBed(code_value());
+          //CooldownNoWait = true;
         } else if (code_seen('R')) {
-          setTargetBed(code_value());
-          CooldownNoWait = false;
+          //setTargetBed(code_value());
+          //CooldownNoWait = false;
         }
         codenum = millis();
 
@@ -1724,6 +1724,7 @@ void process_commands()
         }
         LCD_MESSAGEPGM(MSG_BED_DONE);
         previous_millis_cmd = millis();
+	**/
     #endif
         break;
 
