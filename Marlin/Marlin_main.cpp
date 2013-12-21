@@ -1043,6 +1043,7 @@ void process_commands()
         manage_heater();
         manage_inactivity();
         lcd_update();
+        send_printer_state();
       }
       break;
       #ifdef FWRETRACT
@@ -1242,12 +1243,14 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          send_printer_state();
         }
       }else{
         while(!lcd_clicked()){
           manage_heater();
           manage_inactivity();
           lcd_update();
+          send_printer_state();
         }
       }
       LCD_MESSAGEPGM(MSG_RESUMING);
@@ -1548,6 +1551,7 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          send_printer_state();
         #ifdef TEMP_RESIDENCY_TIME
             /* start/restart the TEMP_RESIDENCY_TIME timer whenever we reach target temp for the first time
               or when current temp falls outside the hysteresis after target temp was reached */
@@ -1595,6 +1599,7 @@ void process_commands()
           manage_heater();
           manage_inactivity();
           lcd_update();
+          send_printer_state();
         }
         LCD_MESSAGEPGM(MSG_BED_DONE);
         previous_millis_cmd = millis();
