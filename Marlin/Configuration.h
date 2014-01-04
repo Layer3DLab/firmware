@@ -105,12 +105,12 @@
 // Effective X/Y positions of the three vertical towers.
 #define SIN_60 0.8660254037844386
 #define COS_60 0.5
-#define DELTA_TOWER1_X -SIN_60*DELTA_RADIUS // front left tower
-#define DELTA_TOWER1_Y -COS_60*DELTA_RADIUS
-#define DELTA_TOWER2_X SIN_60*DELTA_RADIUS // front right tower
-#define DELTA_TOWER2_Y -COS_60*DELTA_RADIUS
-#define DELTA_TOWER3_X 0.0 // back middle tower
-#define DELTA_TOWER3_Y DELTA_RADIUS
+#define DELTA_TOWER1_X DELTA_RADIUS // Coordinate location of tower in vertex A (CW from extruders)
+#define DELTA_TOWER1_Y 0.0
+#define DELTA_TOWER2_X -COS_60*DELTA_RADIUS  // Vertex B
+#define DELTA_TOWER2_Y -SIN_60*DELTA_RADIUS
+#define DELTA_TOWER3_X -COS_60*DELTA_RADIUS // Vertex C
+#define DELTA_TOWER3_Y SIN_60*DELTA_RADIUS
 
 //===========================================================================
 //=============================Thermal Settings  ============================
@@ -357,7 +357,7 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 #define Y_MIN_POS -170
 #define Z_MAX_POS MANUAL_Z_HOME_POS
 #define Z_MIN_POS 0
-#define J_MAX_POS 394
+#define J_MAX_POS 390
 #define J_MIN_POS 0
 
 #define X_MAX_LENGTH (X_MAX_POS - X_MIN_POS)
