@@ -52,7 +52,6 @@
 #include <SPI.h>
 #endif
 
-#define VERSION_STRING  "1.0.0"
 
 // look here for descriptions of gcodes: http://linuxcnc.org/handbook/gcode/g-code.html
 // http://objects.reprap.org/wiki/Mendel_User_Manual:_RepRapGCodes
@@ -423,8 +422,15 @@ void setup()
   if(mcu & 32) SERIAL_ECHOLNPGM(MSG_SOFTWARE_RESET);
   MCUSR=0;
 
+  // Initial greeting
   SERIAL_ECHOPGM(MSG_MARLIN);
   SERIAL_ECHOLNPGM(VERSION_STRING);
+  SERIAL_ECHO("Git Branch: ");
+  SERIAL_ECHOLN(GIT_BRANCH);
+  SERIAL_ECHO("Git Tag: ");
+  SERIAL_ECHOLN(GIT_TAG);
+  SERIAL_ECHO("Git Hash: ");
+  SERIAL_ECHOLN(GIT_HASH);
   #ifdef STRING_VERSION_CONFIG_H
     #ifdef STRING_CONFIG_H_AUTHOR
       SERIAL_ECHO_START;

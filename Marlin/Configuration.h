@@ -10,6 +10,10 @@
 // build by the user have been successfully uploaded into firmware.
 #define STRING_VERSION_CONFIG_H __DATE__ " " __TIME__ // build date and time
 #define STRING_CONFIG_H_AUTHOR "ELEMENT ROBOT INC." // Who made the changes.
+#define VERSION_STRING  "1.0.0"
+#define GIT_BRANCH "fake_printer"
+#define GIT_TAG "none"
+#define GIT_HASH "35a972b"
 
 // SERIAL_PORT selects which serial port should be used for communication with the host.
 // This allows the connection of wireless adapters (for instance) to non-default port pins.
