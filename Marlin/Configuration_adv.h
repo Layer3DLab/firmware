@@ -183,7 +183,7 @@
   #define X_HOME_RETRACT_MM 5 
   #define Y_HOME_RETRACT_MM 5
   #define Z_HOME_RETRACT_MM 5 // deltas need the same for all three axis
-  #define J_HOME_RETRACT_MM 5
+  #define J_HOME_RETRACT_MM 10
   
   
   //#define QUICK_HOME  //if this is defined, if both x and y are to be homed, a diagonal move will be performed initially.
