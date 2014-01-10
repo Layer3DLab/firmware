@@ -455,6 +455,19 @@ void setup()
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
 
+  // Print out json id
+  SERIAL_ECHO("{\"json\":{");
+  SERIAL_ECHO("\"firmware\":{");
+  SERIAL_ECHO("\"branch\":");
+  SERIAL_ECHO(GIT_BRANCH);
+  SERIAL_ECHO(",\"tag\":");
+  SERIAL_ECHO(GIT_TAG);
+  SERIAL_ECHO(",\"hash\":");
+  SERIAL_ECHO(GIT_HASH);
+  SERIAL_ECHO("}"); // End firmware
+  SERIAL_ECHO("}"); // End json
+  SERIAL_ECHOLN("}"); // End json message
+
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
   watchdog_init();
@@ -468,6 +481,8 @@ void setup()
   #if defined(CONTROLLERFAN_PIN) && CONTROLLERFAN_PIN > -1
     SET_OUTPUT(CONTROLLERFAN_PIN); //Set pin used for driver cooling fan
   #endif
+
+
 }
 
 
@@ -2902,7 +2917,8 @@ void send_printer_state()
   {
   // {"state":{"t":{"ext1":#,"ext2":#,"bed":#},"pos":{"X":#,"Y":#,"Z":#,"J":#},
   //  "E0_remaining":#,"E1_remaining":#}}
-    SERIAL_ECHO("{\"state\":{");
+    SERIAL_ECHO("{\"json\":{");
+    SERIAL_ECHO("\"state\":{");
     SERIAL_ECHO("\"t\":{");
     SERIAL_ECHOPAIR("\"ext1\":",degHotend(0));
     #if EXTRUDERS > 1
@@ -2923,7 +2939,9 @@ void send_printer_state()
     SERIAL_ECHO("}"); // End pos
 //   SERIAL_ECHOPAIR(", \"E0_filament_remaining\":",
 //   SERIAL_ECHOPAIR(", \"E1_filament_remaining\":",
-    SERIAL_ECHOLN("}"); // End state
+    SERIAL_ECHO("}"); // End state
+    SERIAL_ECHO("}"); // End json
+    SERIAL_ECHOLN("}"); // End json message
     previous_millis_state = millis();
   }
 }
