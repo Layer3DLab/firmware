@@ -327,7 +327,7 @@
   
   //The ASCII buffer for recieving from the serial:
   #define MAX_CMD_SIZE 96
-  #define BUFSIZE 4
+  #define CMDBUFSIZE 4
   
   
   // Firmware based and LCD controled retract

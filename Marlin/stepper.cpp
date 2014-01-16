@@ -38,6 +38,7 @@
 //=============================public variables  ============================
 //===========================================================================
 block_t *current_block;  // A pointer to the block currently being traced
+extern char json_str[JSONSIZE];
 
 
 //===========================================================================
@@ -88,6 +89,8 @@ static bool check_endstops = true;
 
 volatile long count_position[NUM_AXIS] = { 0, 0, 0, 0, 0};
 volatile signed char count_direction[NUM_AXIS] = { 1, 1, 1, 1, 1};
+
+extern bool comma;
 
 //===========================================================================
 //=============================functions         ============================
@@ -175,24 +178,33 @@ void checkHitEndstops()
 {
  if( endstop_x_hit || endstop_y_hit || endstop_z_hit || endstop_j_hit) {
    SERIAL_ECHO_START;
-   SERIAL_ECHOPGM(MSG_ENDSTOPS_HIT);
+   snprintf(json_str,JSONSIZE,"{%s:[",MSG_ENDSTOPS_HIT);
+   SERIAL_PROTOCOL(json_str);
+   comma = false;
    if(endstop_x_hit) {
-     SERIAL_ECHOPAIR(" X:",(float)endstops_trigsteps[X_AXIS]/axis_steps_per_unit[X_AXIS]);
+     SERIAL_PROTOCOLPGM("\"x\"");
      LCD_MESSAGEPGM(MSG_ENDSTOPS_HIT "X");
+     comma = true;
    }
    if(endstop_y_hit) {
-     SERIAL_ECHOPAIR(" Y:",(float)endstops_trigsteps[Y_AXIS]/axis_steps_per_unit[Y_AXIS]);
+     if (comma) SERIAL_PROTOCOLPGM(",");
+     SERIAL_PROTOCOLPGM("\"y\"");
      LCD_MESSAGEPGM(MSG_ENDSTOPS_HIT "Y");
+     comma = true;
    }
    if(endstop_z_hit) {
-     SERIAL_ECHOPAIR(" Z:",(float)endstops_trigsteps[Z_AXIS]/axis_steps_per_unit[Z_AXIS]);
+     if (comma) SERIAL_PROTOCOLPGM(",");
+     SERIAL_PROTOCOLPGM("\"z\"");
      LCD_MESSAGEPGM(MSG_ENDSTOPS_HIT "Z");
+     comma = true;
    }
    if(endstop_j_hit) {
-     SERIAL_ECHOPAIR(" J:",(float)endstops_trigsteps[J_AXIS]/axis_steps_per_unit[J_AXIS]);
+     if (comma) SERIAL_PROTOCOLPGM(",");
+     SERIAL_PROTOCOLPGM("\"j\"");
      LCD_MESSAGEPGM(MSG_ENDSTOPS_HIT "J");
    }
-   SERIAL_ECHOLN("");
+   SERIAL_PROTOCOL("]}");
+   SERIAL_MSG_END;
    endstop_x_hit=false;
    endstop_y_hit=false;
    endstop_z_hit=false;
@@ -304,17 +316,6 @@ FORCE_INLINE void trapezoid_generator_reset() {
   acc_step_rate = current_block->initial_rate;
   acceleration_time = calc_timer(acc_step_rate);
   OCR1A = acceleration_time;
-
-//    SERIAL_ECHO_START;
-//    SERIAL_ECHOPGM("advance :");
-//    SERIAL_ECHO(current_block->advance/256.0);
-//    SERIAL_ECHOPGM("advance rate :");
-//    SERIAL_ECHO(current_block->advance_rate/256.0);
-//    SERIAL_ECHOPGM("initial advance :");
-//  SERIAL_ECHO(current_block->initial_advance/256.0);
-//    SERIAL_ECHOPGM("final advance :");
-//    SERIAL_ECHOLN(current_block->final_advance/256.0);
-
 }
 
 // "The Stepper Driver Interrupt" - This timer interrupt is the workhorse.
@@ -1325,21 +1326,17 @@ void microstep_mode(uint8_t driver, uint8_t stepping_mode)
 
 void microstep_readings()
 {
-      SERIAL_PROTOCOLPGM("MS1,MS2 Pins\n");
-      SERIAL_PROTOCOLPGM("X: ");
-      SERIAL_PROTOCOL(   digitalRead(X_MS1_PIN));
-      SERIAL_PROTOCOLLN( digitalRead(X_MS2_PIN));
-      SERIAL_PROTOCOLPGM("Y: ");
-      SERIAL_PROTOCOL(   digitalRead(Y_MS1_PIN));
-      SERIAL_PROTOCOLLN( digitalRead(Y_MS2_PIN));
-      SERIAL_PROTOCOLPGM("Z: ");
-      SERIAL_PROTOCOL(   digitalRead(Z_MS1_PIN));
-      SERIAL_PROTOCOLLN( digitalRead(Z_MS2_PIN));
-      SERIAL_PROTOCOLPGM("E0: ");
-      SERIAL_PROTOCOL(   digitalRead(E0_MS1_PIN));
-      SERIAL_PROTOCOLLN( digitalRead(E0_MS2_PIN));
-      SERIAL_PROTOCOLPGM("E1: ");
-      SERIAL_PROTOCOL(   digitalRead(E1_MS1_PIN));
-      SERIAL_PROTOCOLLN( digitalRead(E1_MS2_PIN));
+  snprintf(json_str,JSONSIZE,"{\"ms pins\":{\"ms1\":{\"x\":%i,\"y\":%i,\"z\":%i,\"e1\":%i,\"e2\":%i},\"ms2\":{\"x\":%i,\"y\":%i,\"z\":%i,\"e1\":%i,\"e2\":%i}}}", \
+    digitalRead(X_MS1_PIN), \
+    digitalRead(Y_MS1_PIN), \
+    digitalRead(Z_MS1_PIN), \
+    digitalRead(E0_MS1_PIN), \
+    digitalRead(E1_MS1_PIN), \
+    digitalRead(X_MS2_PIN), \
+    digitalRead(Y_MS2_PIN), \
+    digitalRead(Z_MS2_PIN), \
+    digitalRead(E0_MS2_PIN), \
+    digitalRead(E1_MS2_PIN));
+  SERIAL_ECHO(json_str);
 }
 

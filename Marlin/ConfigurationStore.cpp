@@ -4,6 +4,13 @@
 #include "ultralcd.h"
 #include "ConfigurationStore.h"
 
+extern char json_str[JSONSIZE];
+long longnumber = 158;
+unsigned unsgnd = 15;
+unsigned long unsgndlong = 1587;
+uint32_t uint32 = 1587;
+uint8_t uint8 = 15;
+
 void _EEPROM_writeData(int &pos, uint8_t* value, uint8_t size)
 {
     do
@@ -89,8 +96,7 @@ void Config_StoreSettings()
   char ver2[4]=EEPROM_VERSION;
   i=EEPROM_OFFSET;
   EEPROM_WRITE_VAR(i,ver2); // validate data
-  SERIAL_ECHO_START;
-  SERIAL_ECHOLNPGM("Settings Stored");
+  SERIAL_ECHOPGM("Settings Stored");
 }
 #endif //EEPROM_SETTINGS
 
@@ -98,80 +104,85 @@ void Config_StoreSettings()
 #ifndef DISABLE_M503
 void Config_PrintSettings()
 {  // Always have this function, even with EEPROM_SETTINGS disabled, the current values will be shown
+    SERIAL_ECHO(json_str);
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Steps per unit:");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M92 X",axis_steps_per_unit[0]);
-    SERIAL_ECHOPAIR(" Y",axis_steps_per_unit[1]);
-    SERIAL_ECHOPAIR(" Z",axis_steps_per_unit[2]);
-    SERIAL_ECHOPAIR(" J",axis_steps_per_unit[3]);
-    SERIAL_ECHOPAIR(" E",axis_steps_per_unit[4]);
-    SERIAL_ECHOLN("");
-      
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Maximum feedrates (mm/s):");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M203 X",max_feedrate[0]);
-    SERIAL_ECHOPAIR(" Y",max_feedrate[1] ); 
-    SERIAL_ECHOPAIR(" Z", max_feedrate[2] );
-    SERIAL_ECHOPAIR(" J", max_feedrate[3]);
-    SERIAL_ECHOPAIR(" E", max_feedrate[4]);
-    SERIAL_ECHOLN("");
+    SERIAL_PROTOCOLPGM("{\"steps/unit\":{");
+    SERIAL_ECHOPAIR("\"x\":",axis_steps_per_unit[X_AXIS]);
+    SERIAL_ECHOPAIR(",\"y\":",axis_steps_per_unit[Y_AXIS]);
+    SERIAL_ECHOPAIR(",\"z\":",axis_steps_per_unit[Z_AXIS]);
+    SERIAL_ECHOPAIR(",\"j\":",axis_steps_per_unit[J_AXIS]);
+    SERIAL_ECHOPAIR(",\"e\":",axis_steps_per_unit[E_AXIS]);
+    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_MSG_END;
 
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Maximum Acceleration (mm/s2):");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M201 X" ,max_acceleration_units_per_sq_second[0] );
-    SERIAL_ECHOPAIR(" Y" , max_acceleration_units_per_sq_second[1] );
-    SERIAL_ECHOPAIR(" Z" ,max_acceleration_units_per_sq_second[2] );
-    SERIAL_ECHOPAIR(" J" ,max_acceleration_units_per_sq_second[3] );
-    SERIAL_ECHOPAIR(" E" ,max_acceleration_units_per_sq_second[4]);
-    SERIAL_ECHOLN("");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Acceleration: S=acceleration, T=retract acceleration");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M204 S",acceleration ); 
-    SERIAL_ECHOPAIR(" T" ,retract_acceleration);
-    SERIAL_ECHOLN("");
+    SERIAL_PROTOCOLPGM("{\"max feedrate (mm/s)\":{");
+    SERIAL_ECHOPAIR("\"x\":",max_feedrate[X_AXIS]);
+    SERIAL_ECHOPAIR(",\"y\":",max_feedrate[Y_AXIS]);
+    SERIAL_ECHOPAIR(",\"z\":",max_feedrate[Z_AXIS]);
+    SERIAL_ECHOPAIR(",\"j\":",max_feedrate[J_AXIS]);
+    SERIAL_ECHOPAIR(",\"e\":",max_feedrate[E_AXIS]);
+    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_MSG_END;
 
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Advanced variables: S=Min feedrate (mm/s), T=Min travel feedrate (mm/s), B=minimum segment time (ms), X=maximum XY jerk (mm/s),  Z=maximum Z jerk (mm/s),  E=maximum E jerk (mm/s)");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M205 S",minimumfeedrate ); 
-    SERIAL_ECHOPAIR(" T" ,mintravelfeedrate ); 
-    SERIAL_ECHOPAIR(" B" ,minsegmenttime ); 
-    SERIAL_ECHOPAIR(" X" ,max_xy_jerk ); 
-    SERIAL_ECHOPAIR(" Z" ,max_z_jerk);
-    SERIAL_ECHOPAIR(" J" ,max_j_jerk);
-    SERIAL_ECHOPAIR(" E" ,max_e_jerk);
-    SERIAL_ECHOLN(""); 
+    SERIAL_PROTOCOLPGM("{\"max acceleration (mm/s^2)\":{");
+    SERIAL_ECHOPAIR("\"x\":",max_acceleration_units_per_sq_second[X_AXIS]);
+    SERIAL_ECHOPAIR(",\"y\":",max_acceleration_units_per_sq_second[Y_AXIS]);
+    SERIAL_ECHOPAIR(",\"z\":",max_acceleration_units_per_sq_second[Z_AXIS]);
+    SERIAL_ECHOPAIR(",\"j\":",max_acceleration_units_per_sq_second[J_AXIS]);
+    SERIAL_ECHOPAIR(",\"e\":",max_acceleration_units_per_sq_second[E_AXIS]);
+    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_MSG_END;
 
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Home offset (mm):");
+    SERIAL_ECHOPAIR("{\"acceleration\":",acceleration);
+    SERIAL_ECHOPAIR(",\"retract_acceleration\":",retract_acceleration);
+    SERIAL_PROTOCOLPGM("}");
+    SERIAL_MSG_END;
+
     SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M206 X",add_homeing[0] );
-    SERIAL_ECHOPAIR(" Y" ,add_homeing[1] );
-    SERIAL_ECHOPAIR(" Z" ,add_homeing[2] );
-    SERIAL_ECHOPAIR(" J" ,add_homeing[3] );
-    SERIAL_ECHOLN("");
+    SERIAL_ECHOPAIR("{\"min feedrate (mm/s)\":",minimumfeedrate);
+    SERIAL_ECHOPAIR("\"min travel feedrate (mm/s)\":",mintravelfeedrate);
+    SERIAL_ECHOPAIR("\"min segment time (ms)\":",minsegmenttime);
+    SERIAL_PROTOCOLPGM("}");
+    SERIAL_MSG_END;
+
+    SERIAL_ECHO_START;
+    SERIAL_PROTOCOLPGM("{\"max jerk\":{");
+    SERIAL_ECHOPAIR("\"xy\":",max_xy_jerk);
+    SERIAL_ECHOPAIR(",\"z\":",max_z_jerk);
+    SERIAL_ECHOPAIR(",\"j\":",max_j_jerk);
+    SERIAL_ECHOPAIR(",\"e\":",max_e_jerk);
+    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_MSG_END;
+
+    SERIAL_ECHO_START;
+    SERIAL_PROTOCOLPGM("{\"home offsets (mm)\":{");
+    SERIAL_ECHOPAIR("\"x\":",add_homeing[X_AXIS]);
+    SERIAL_ECHOPAIR(",\"y\":",add_homeing[Y_AXIS]);
+    SERIAL_ECHOPAIR(",\"z\":",add_homeing[Z_AXIS]);
+    SERIAL_ECHOPAIR(",\"j\":",add_homeing[J_AXIS]);
+    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_MSG_END;
 #ifdef DELTA
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("Endstop adjustement (mm):");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("  M666 X",endstop_adj[0] );
-    SERIAL_ECHOPAIR(" Y" ,endstop_adj[1] );
-    SERIAL_ECHOPAIR(" Z" ,endstop_adj[2] );
-    SERIAL_ECHOPAIR(" J" ,endstop_adj[3] );
-    SERIAL_ECHOLN("");
+    SERIAL_PROTOCOLPGM("{\"endstop adjustment (mm)\":{");
+    SERIAL_ECHOPAIR("\"x\":",endstop_adj[X_AXIS]);
+    SERIAL_ECHOPAIR(",\"y\":",endstop_adj[Y_AXIS]);
+    SERIAL_ECHOPAIR(",\"z\":",endstop_adj[Z_AXIS]);
+    SERIAL_ECHOPAIR(",\"j\":",endstop_adj[J_AXIS]);
+    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_MSG_END;
 #endif
 #ifdef PIDTEMP
     SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM("PID settings:");
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPAIR("   M301 P",Kp); 
-    SERIAL_ECHOPAIR(" I" ,unscalePID_i(Ki)); 
-    SERIAL_ECHOPAIR(" D" ,unscalePID_d(Kd));
-    SERIAL_ECHOLN(""); 
+    SERIAL_PROTOCOLPGM("{\"nozzle pid\":{");
+    SERIAL_ECHOPAIR("\"p\":",Kp);
+    SERIAL_ECHOPAIR(",\"i\":",unscalePID_i(Ki));
+    SERIAL_ECHOPAIR(",\"d\":",unscalePID_d(Kd));
+    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_MSG_END;
 #endif
 } 
 #endif
@@ -184,7 +195,6 @@ void Config_RetrieveSettings()
     char stored_ver[4];
     char ver[4]=EEPROM_VERSION;
     EEPROM_READ_VAR(i,stored_ver); //read stored version
-    //  SERIAL_ECHOLN("Version: [" << ver << "] Stored version: [" << stored_ver << "]");
     if (strncmp(ver,stored_ver,3) == 0)
     {
         // version number match
@@ -232,8 +242,7 @@ void Config_RetrieveSettings()
 
 		// Call updatePID (similar to when we have processed M301)
 		updatePID();
-        SERIAL_ECHO_START;
-        SERIAL_ECHOLNPGM("Stored settings retrieved");
+        SERIAL_ECHOPGM("\"Stored settings retrieved\"");
     }
     else
     {
@@ -296,8 +305,7 @@ void Config_ResetDefault()
     Kc = DEFAULT_Kc;
 #endif//PID_ADD_EXTRUSION_RATE
 #endif//PIDTEMP
-
-SERIAL_ECHO_START;
-SERIAL_ECHOLNPGM("Hardcoded Default Settings Loaded");
+;
+SERIAL_ECHOPGM("\"Hardcoded default settings loaded\"");
 
 }
