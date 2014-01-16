@@ -69,6 +69,8 @@ float current_temperature_bed = 0.0;
 #ifdef BABYSTEPPING
   volatile int babystepsTodo[3]={0,0,0};
 #endif
+
+extern char json_str[JSONSIZE];
   
 //===========================================================================
 //=============================private variables============================
@@ -182,11 +184,11 @@ void PID_autotune(float temp, int extruder, int ncycles)
        ||(extruder < 0)
   #endif
        ){
-          SERIAL_ECHOLN("PID Autotune failed. Bad extruder number.");
+          SERIAL_ERROR("\"PID autotune failed. Bad extruder number.\"");
           return;
         }
 	
-  SERIAL_ECHOLN("PID Autotune start");
+  SERIAL_ECHO("\"PID autotune start\"");
   
   disable_heater(); // switch off all heaters.
 
@@ -236,38 +238,24 @@ void PID_autotune(float temp, int extruder, int ncycles)
             if(bias > (extruder<0?(MAX_BED_POWER):(PID_MAX))/2) d = (extruder<0?(MAX_BED_POWER):(PID_MAX)) - 1 - bias;
             else d = bias;
 
-            SERIAL_PROTOCOLPGM(" bias: "); SERIAL_PROTOCOL(bias);
-            SERIAL_PROTOCOLPGM(" d: "); SERIAL_PROTOCOL(d);
-            SERIAL_PROTOCOLPGM(" min: "); SERIAL_PROTOCOL(min);
-            SERIAL_PROTOCOLPGM(" max: "); SERIAL_PROTOCOLLN(max);
+            snprintf(json_str,JSONSIZE,"{\"pid autotune\":{\"bias\":%.2f,\"d\":%.2f,\"min\":%.1f,\"max\":%.1f}}", \
+              bias, \
+              d, \
+              min, \
+              max);
+            SERIAL_ECHO(json_str);
             if(cycles > 2) {
               Ku = (4.0*d)/(3.14159*(max-min)/2.0);
               Tu = ((float)(t_low + t_high)/1000.0);
-              SERIAL_PROTOCOLPGM(" Ku: "); SERIAL_PROTOCOL(Ku);
-              SERIAL_PROTOCOLPGM(" Tu: "); SERIAL_PROTOCOLLN(Tu);
               Kp = 0.6*Ku;
               Ki = 2*Kp/Tu;
               Kd = Kp*Tu/8;
-              SERIAL_PROTOCOLLNPGM(" Clasic PID ");
-              SERIAL_PROTOCOLPGM(" Kp: "); SERIAL_PROTOCOLLN(Kp);
-              SERIAL_PROTOCOLPGM(" Ki: "); SERIAL_PROTOCOLLN(Ki);
-              SERIAL_PROTOCOLPGM(" Kd: "); SERIAL_PROTOCOLLN(Kd);
-              /*
-              Kp = 0.33*Ku;
-              Ki = Kp/Tu;
-              Kd = Kp*Tu/3;
-              SERIAL_PROTOCOLLNPGM(" Some overshoot ")
-              SERIAL_PROTOCOLPGM(" Kp: "); SERIAL_PROTOCOLLN(Kp);
-              SERIAL_PROTOCOLPGM(" Ki: "); SERIAL_PROTOCOLLN(Ki);
-              SERIAL_PROTOCOLPGM(" Kd: "); SERIAL_PROTOCOLLN(Kd);
-              Kp = 0.2*Ku;
-              Ki = 2*Kp/Tu;
-              Kd = Kp*Tu/3;
-              SERIAL_PROTOCOLLNPGM(" No overshoot ")
-              SERIAL_PROTOCOLPGM(" Kp: "); SERIAL_PROTOCOLLN(Kp);
-              SERIAL_PROTOCOLPGM(" Ki: "); SERIAL_PROTOCOLLN(Ki);
-              SERIAL_PROTOCOLPGM(" Kd: "); SERIAL_PROTOCOLLN(Kd);
-              */
+              snprintf(json_str,JSONSIZE,"{\"pid autotune\":{\"Ku\":%.1f,\"Tu\":%.1f,\"Kp\":%.1f,\"Ki\":%.1f,\"Kd\":%.1f}}", \
+                Ku, \
+                Tu, \
+                Kp, \
+                Ki, \
+                Kd);
             }
           }
           if (extruder<0)
@@ -280,31 +268,34 @@ void PID_autotune(float temp, int extruder, int ncycles)
       } 
     }
     if(input > (temp + 20)) {
-      SERIAL_PROTOCOLLNPGM("PID Autotune failed! Temperature too high");
+      SERIAL_ERRORPGM("\"PID autotune failed! Temperature too high\"");
       return;
     }
     if(millis() - temp_millis > 2000) {
       int p;
+
+      SERIAL_ECHO_START;
+			snprintf(json_str,JSONSIZE,"{\"pid autotune\":{\"target temp (C)\":%.1f,",input);
+			SERIAL_PROTOCOL(json_str);
       if (extruder<0){
-        p=soft_pwm_bed;       
-        SERIAL_PROTOCOLPGM("ok B:");
+        p=soft_pwm_bed;
+        snprintf(json_str,JSONSIZE,"\"bed pwm\":%i}}",p);
       }else{
-        p=soft_pwm[extruder];       
-        SERIAL_PROTOCOLPGM("ok T:");
+        p=soft_pwm[extruder];
+        snprintf(json_str,JSONSIZE,"\"nozzle pwm\":%i}}",p);
       }
-			
-      SERIAL_PROTOCOL(input);   
-      SERIAL_PROTOCOLPGM(" @:");
-      SERIAL_PROTOCOLLN(p);       
+
+      SERIAL_PROTOCOL(json_str);
+      SERIAL_MSG_END;
 
       temp_millis = millis();
     }
     if(((millis() - t1) + (millis() - t2)) > (10L*60L*1000L*2L)) {
-      SERIAL_PROTOCOLLNPGM("PID Autotune failed! timeout");
+      SERIAL_ERRORPGM("\"PID autotune failed! timeout\"");
       return;
     }
     if(cycles > ncycles) {
-      SERIAL_PROTOCOLLNPGM("PID Autotune finished! Put the Kp, Ki and Kd constants into Configuration.h");
+      SERIAL_ECHOPGM("\"PID autotune finished! Put the Kp, Ki and Kd constants into Configuration.h\"");
       return;
     }
     lcd_update();
@@ -447,6 +438,7 @@ void manage_heater()
           pid_output = constrain(target_temperature[e], 0, PID_MAX);
     #endif //PID_OPENLOOP
     #ifdef PID_DEBUG
+    snprintf(json_str,JSONSIZE,"{\"pid debug\":{\"input\":%f,\"output\":%f,\"p\":%.2f,\"i\":%.2f")
     SERIAL_ECHO_START(" PIDDEBUG ");
     SERIAL_ECHO(e);
     SERIAL_ECHO(": Input ");
@@ -602,9 +594,8 @@ static float analog2temp(int raw, uint8_t e) {
   if(e >= EXTRUDERS)
 #endif
   {
-      SERIAL_ERROR_START;
-      SERIAL_ERROR((int)e);
-      SERIAL_ERRORLNPGM(" - Invalid extruder number !");
+      snprintf(json_str,JSONSIZE,"{\"invalid extruder\":%i}",(int)e);
+      SERIAL_ERROR(json_str);
       kill();
   } 
   #ifdef HEATER_0_USES_MAX6675
@@ -934,9 +925,7 @@ void disable_heater()
 void max_temp_error(uint8_t e) {
   disable_heater();
   if(IsStopped() == false) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLN((int)e);
-    SERIAL_ERRORLNPGM(": Extruder switched off. MAXTEMP triggered !");
+    SERIAL_ERRORPGM("\"MAXTEMP triggered. Extruder switched off\"");
     LCD_ALERTMESSAGEPGM("Err: MAXTEMP");
   }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
@@ -947,9 +936,7 @@ void max_temp_error(uint8_t e) {
 void min_temp_error(uint8_t e) {
   disable_heater();
   if(IsStopped() == false) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLN((int)e);
-    SERIAL_ERRORLNPGM(": Extruder switched off. MINTEMP triggered !");
+    SERIAL_ERRORPGM("\"MINTEMP triggered. Extruder switched off\"");
     LCD_ALERTMESSAGEPGM("Err: MINTEMP");
   }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
@@ -962,8 +949,7 @@ void bed_max_temp_error(void) {
   WRITE(HEATER_BED_PIN, 0);
 #endif
   if(IsStopped() == false) {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM("Temperature heated bed switched off. MAXTEMP triggered !!");
+    SERIAL_ERRORPGM("\"MAXTEMP BED triggered. Extruder switched off\"");
     LCD_ALERTMESSAGEPGM("Err: MAXTEMP BED");
   }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE

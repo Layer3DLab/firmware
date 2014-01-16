@@ -563,16 +563,14 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
     if(degHotend(active_extruder)<extrude_min_temp)
     {
       position[E_AXIS]=target[E_AXIS]; //behave as if the move really took place, but ignore E part
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM(MSG_ERR_COLD_EXTRUDE_STOP);
+      SERIAL_ERRORPGM(MSG_ERR_COLD_EXTRUDE_STOP);
     }
     
     #ifdef PREVENT_LENGTHY_EXTRUDE
     if(labs(target[E_AXIS]-position[E_AXIS])>axis_steps_per_unit[E_AXIS]*EXTRUDE_MAXLENGTH)
     {
       position[E_AXIS]=target[E_AXIS]; //behave as if the move really took place, but ignore E part
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLNPGM(MSG_ERR_LONG_EXTRUDE_STOP);
+      SERIAL_ERRORPGM(MSG_ERR_LONG_EXTRUDE_STOP);
     }
     #endif
   }
@@ -601,14 +599,6 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   block->steps_e *= extrudemultiply;
   block->steps_e /= 100;
   block->step_event_count = max(block->steps_x, max(block->steps_y, max(block->steps_z, max(block->steps_j, block->steps_e))));
-/**
-  SERIAL_ECHOPGM(" Planner.cpp plan_buffer_line() targets. X: "); SERIAL_ECHO(target[X_AXIS]);
-  SERIAL_ECHOPGM(", Y: "); SERIAL_ECHO(target[Y_AXIS]);
-  SERIAL_ECHOPGM(", Z: "); SERIAL_ECHOLN(target[Z_AXIS]);
-  SERIAL_ECHOPGM(" plan_buffer_line() positions. X: "); SERIAL_ECHO(position[X_AXIS]);
-  SERIAL_ECHOPGM(", Y: "); SERIAL_ECHO(position[Y_AXIS]);
-  SERIAL_ECHOPGM(", Z: "); SERIAL_ECHOLN(position[Z_AXIS]);
-  **/
   // Bail if this is a zero-length block
   if (block->step_event_count <= dropsegments)
   { 
@@ -948,13 +938,6 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
       block->advance_rate = advance / (float)acc_dist;
     }
   }
-  /*
-    SERIAL_ECHO_START;
-   SERIAL_ECHOPGM("advance :");
-   SERIAL_ECHO(block->advance/256.0);
-   SERIAL_ECHOPGM("advance rate :");
-   SERIAL_ECHOLN(block->advance_rate/256.0);
-   */
 #endif // ADVANCE
 
   calculate_trapezoid_for_block(block, block->entry_speed/block->nominal_speed,

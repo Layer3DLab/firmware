@@ -54,30 +54,26 @@
 #define SERIAL_PROTOCOL(x) (MYSERIAL.print(x))
 #define SERIAL_PROTOCOL_F(x,y) (MYSERIAL.print(x,y))
 #define SERIAL_PROTOCOLPGM(x) (serialprintPGM(PSTR(x)))
-#define SERIAL_PROTOCOLLN(x) (MYSERIAL.print(x),MYSERIAL.write('\n'))
 #define SERIAL_PROTOCOLLNPGM(x) (serialprintPGM(PSTR(x)),MYSERIAL.write('\n'))
 
+const char errorstart[] PROGMEM ="{\"error\":";
+const char echostart[] PROGMEM ="{\"echo\":";
+const char msgend[] PROGMEM ="}\n";
+#define SERIAL_MSG_END (serialprintPGM(msgend))
 
-const char errormagic[] PROGMEM ="Error:";
-const char echomagic[] PROGMEM ="echo:";
-#define SERIAL_ERROR_START (serialprintPGM(errormagic))
-#define SERIAL_ERROR(x) SERIAL_PROTOCOL(x)
-#define SERIAL_ERRORPGM(x) SERIAL_PROTOCOLPGM(x)
-#define SERIAL_ERRORLN(x) SERIAL_PROTOCOLLN(x)
-#define SERIAL_ERRORLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
+#define SERIAL_ERROR_START (serialprintPGM(errorstart))
+#define SERIAL_ERROR(x) (SERIAL_ERROR_START,SERIAL_PROTOCOL(x),SERIAL_MSG_END)
+#define SERIAL_ERRORPGM(x) (SERIAL_ERROR_START,SERIAL_PROTOCOLPGM(x),SERIAL_MSG_END)
 
-#define SERIAL_ECHO_START (serialprintPGM(echomagic))
-#define SERIAL_ECHO(x) SERIAL_PROTOCOL(x)
-#define SERIAL_ECHOPGM(x) SERIAL_PROTOCOLPGM(x)
-#define SERIAL_ECHOLN(x) SERIAL_PROTOCOLLN(x)
-#define SERIAL_ECHOLNPGM(x) SERIAL_PROTOCOLLNPGM(x)
+#define SERIAL_ECHO_START (serialprintPGM(echostart))
+#define SERIAL_ECHO(x) (SERIAL_ECHO_START,SERIAL_PROTOCOL(x),SERIAL_MSG_END)
+#define SERIAL_ECHOPGM(x) (SERIAL_ECHO_START,SERIAL_PROTOCOLPGM(x),SERIAL_MSG_END)
 
 #define SERIAL_ECHOPAIR(name,value) (serial_echopair_P(PSTR(name),(value)))
 
 void serial_echopair_P(const char *s_P, float v);
 void serial_echopair_P(const char *s_P, double v);
 void serial_echopair_P(const char *s_P, unsigned long v);
-
 
 //things to write to serial from Programmemory. saves 400 to 2k of RAM.
 FORCE_INLINE void serialprintPGM(const char *str)
@@ -196,6 +192,7 @@ void setPwmFrequency(uint8_t pin, int val);
   #define CRITICAL_SECTION_END    SREG = _sreg;
 #endif //CRITICAL_SECTION_START
 
+#define JSONSIZE 256
 extern float homing_feedrate[];
 extern bool axis_relative_modes[];
 extern int feedmultiply;

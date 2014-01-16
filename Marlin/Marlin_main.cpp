@@ -182,6 +182,7 @@ float endstop_adj[4]={0,0,0,0};
 #endif
 float min_pos[4] = { X_MIN_POS, Y_MIN_POS, Z_MIN_POS, J_MIN_POS };
 float max_pos[4] = { X_MAX_POS, Y_MAX_POS, Z_MAX_POS, J_MAX_POS };
+char json_str[JSONSIZE];
 
 // Extruder offset
 #if EXTRUDERS > 1
@@ -234,8 +235,8 @@ static long gcode_N, gcode_LastN, Stopped_gcode_LastN = 0;
 
 static bool relative_mode = false;  //Determines Absolute or Relative Coordinates
 
-static char cmdbuffer[BUFSIZE][MAX_CMD_SIZE];
-static bool fromsd[BUFSIZE];
+static char cmdbuffer[CMDBUFSIZE][MAX_CMD_SIZE];
+static bool fromsd[CMDBUFSIZE];
 static int bufindr = 0;
 static int bufindw = 0;
 static int buflen = 0;
@@ -271,6 +272,8 @@ bool Stopped=false;
 
 bool CooldownNoWait = true;
 bool target_direction;
+
+bool comma = false;
 
 //===========================================================================
 //=============================ROUTINES=============================
@@ -308,30 +311,32 @@ extern "C"{
 //needs overworking someday
 void enquecommand(const char *cmd)
 {
-  if(buflen < BUFSIZE)
+  if(buflen < CMDBUFSIZE)
   {
     //this is dangerous if a mixing of serial and this happsens
     strcpy(&(cmdbuffer[bufindw][0]),cmd);
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("enqueing \"");
-    SERIAL_ECHO(cmdbuffer[bufindw]);
-    SERIAL_ECHOLNPGM("\"");
-    bufindw= (bufindw + 1)%BUFSIZE;
+    SERIAL_PROTOCOLPGM("{\"enqueing\":\"");
+    SERIAL_PROTOCOL(cmdbuffer[bufindw]);
+    SERIAL_PROTOCOLPGM("\"}");
+    SERIAL_MSG_END;
+    bufindw= (bufindw + 1)%CMDBUFSIZE;
     buflen += 1;
   }
 }
 
 void enquecommand_P(const char *cmd)
 {
-  if(buflen < BUFSIZE)
+  if(buflen < CMDBUFSIZE)
   {
     //this is dangerous if a mixing of serial and this happsens
     strcpy_P(&(cmdbuffer[bufindw][0]),cmd);
     SERIAL_ECHO_START;
-    SERIAL_ECHOPGM("enqueing \"");
-    SERIAL_ECHO(cmdbuffer[bufindw]);
-    SERIAL_ECHOLNPGM("\"");
-    bufindw= (bufindw + 1)%BUFSIZE;
+    SERIAL_PROTOCOLPGM("{\"enqueing\":\"");
+    SERIAL_PROTOCOL(cmdbuffer[bufindw]);
+    SERIAL_PROTOCOLPGM("\"}");
+    SERIAL_MSG_END;
+    bufindw= (bufindw + 1)%CMDBUFSIZE;
     buflen += 1;
   }
 }
@@ -411,37 +416,24 @@ void setup()
   setup_killpin();
   setup_powerhold();
   MYSERIAL.begin(BAUDRATE);
-  SERIAL_PROTOCOLLNPGM("start");
-  SERIAL_ECHO_START;
+  SERIAL_PROTOCOLPGM("{\"start\":{\"reset status\":");
 
   // Check startup - does nothing if bootloader sets MCUSR to 0
   byte mcu = MCUSR;
-  if(mcu & 1) SERIAL_ECHOLNPGM(MSG_POWERUP);
-  if(mcu & 2) SERIAL_ECHOLNPGM(MSG_EXTERNAL_RESET);
-  if(mcu & 4) SERIAL_ECHOLNPGM(MSG_BROWNOUT_RESET);
-  if(mcu & 8) SERIAL_ECHOLNPGM(MSG_WATCHDOG_RESET);
-  if(mcu & 32) SERIAL_ECHOLNPGM(MSG_SOFTWARE_RESET);
+  if(mcu & 1) SERIAL_PROTOCOLPGM(MSG_POWERUP);
+  if(mcu & 2) SERIAL_PROTOCOLPGM(MSG_EXTERNAL_RESET);
+  if(mcu & 4) SERIAL_PROTOCOLPGM(MSG_BROWNOUT_RESET);
+  if(mcu & 8) SERIAL_PROTOCOLPGM(MSG_WATCHDOG_RESET);
+  if(mcu & 32) SERIAL_PROTOCOLPGM(MSG_SOFTWARE_RESET);
   MCUSR=0;
 
-  SERIAL_ECHOPGM(MSG_MARLIN);
-  SERIAL_ECHOLNPGM(VERSION_STRING);
-  #ifdef STRING_VERSION_CONFIG_H
-    #ifdef STRING_CONFIG_H_AUTHOR
-      SERIAL_ECHO_START;
-      SERIAL_ECHOPGM(MSG_CONFIGURATION_VER);
-      SERIAL_ECHOPGM(STRING_VERSION_CONFIG_H);
-      SERIAL_ECHOPGM(MSG_AUTHOR);
-      SERIAL_ECHOLNPGM(STRING_CONFIG_H_AUTHOR);
-      SERIAL_ECHOPGM("Compiled: ");
-      SERIAL_ECHOLNPGM(__DATE__);
-    #endif
-  #endif
-  SERIAL_ECHO_START;
-  SERIAL_ECHOPGM(MSG_FREE_MEMORY);
-  SERIAL_ECHO(freeMemory());
-  SERIAL_ECHOPGM(MSG_PLANNER_BUFFER_BYTES);
-  SERIAL_ECHOLN((int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
-  for(int8_t i = 0; i < BUFSIZE; i++)
+  snprintf(json_str,JSONSIZE,",%s:%s,%s:%s,%s:%i,%s:%i}}",MSG_CONFIGURATION_VER,STRING_VERSION_CONFIG_H, \
+    MSG_AUTHOR,STRING_CONFIG_H_AUTHOR, \
+    MSG_FREE_MEMORY,freeMemory(),
+    MSG_PLANNER_BUFFER_BYTES,(int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
+  SERIAL_PROTOCOL(json_str);
+  SERIAL_PROTOCOLLNPGM("");
+  for(int8_t i = 0; i < CMDBUFSIZE; i++)
   {
     fromsd[i] = false;
   }
@@ -449,18 +441,8 @@ void setup()
   // loads data from EEPROM if available else uses defaults (and resets step acceleration rate)
   Config_RetrieveSettings();
 
-  // Print out json id
-  SERIAL_ECHO("{\"json\":{");
-  SERIAL_ECHO("\"firmware\":{");
-  SERIAL_ECHO("\"branch\":");
-  SERIAL_ECHO(GIT_BRANCH);
-  SERIAL_ECHO(",\"tag\":");
-  SERIAL_ECHO(GIT_TAG);
-  SERIAL_ECHO(",\"hash\":");
-  SERIAL_ECHO(GIT_HASH);
-  SERIAL_ECHO("}"); // End firmware
-  SERIAL_ECHO("}"); // End json
-  SERIAL_ECHOLN("}"); // End json message
+  // Print out firmware and hardware info
+  SERIAL_ECHO(MSG_M115_REPORT);
 
   tp_init();    // Initialize temperature loop
   plan_init();  // Initialize planner;
@@ -482,7 +464,7 @@ void setup()
 
 void loop()
 {
-  if(buflen < (BUFSIZE-1))
+  if(buflen < (CMDBUFSIZE-1))
     get_command();
   #ifdef SDSUPPORT
   card.checkautostart(false);
@@ -518,7 +500,7 @@ void loop()
       process_commands();
     #endif //SDSUPPORT
     buflen = (buflen-1);
-    bufindr = (bufindr + 1)%BUFSIZE;
+    bufindr = (bufindr + 1)%CMDBUFSIZE;
   }
   //check heater every n milliseconds
   manage_heater();
@@ -530,7 +512,7 @@ void loop()
 
 void get_command()
 {
-  while( MYSERIAL.available() > 0  && buflen < BUFSIZE) {
+  while( MYSERIAL.available() > 0  && buflen < CMDBUFSIZE) {
     serial_char = MYSERIAL.read();
     if(serial_char == '\n' ||
        serial_char == '\r' ||
@@ -550,10 +532,8 @@ void get_command()
           strchr_pointer = strchr(cmdbuffer[bufindw], 'N');
           gcode_N = (strtol(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL, 10));
           if(gcode_N != gcode_LastN+1 && (strstr_P(cmdbuffer[bufindw], PSTR("M110")) == NULL) ) {
-            SERIAL_ERROR_START;
-            SERIAL_ERRORPGM(MSG_ERR_LINE_NO);
-            SERIAL_ERRORLN(gcode_LastN);
-            //Serial.println(gcode_N);
+            snprintf(json_str,JSONSIZE,"{%s:%l}",MSG_ERR_LINE_NO,gcode_LastN);
+            SERIAL_ERROR(json_str);
             FlushSerialRequestResend();
             serial_count = 0;
             return;
@@ -567,9 +547,8 @@ void get_command()
             strchr_pointer = strchr(cmdbuffer[bufindw], '*');
 
             if( (int)(strtod(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL)) != checksum) {
-              SERIAL_ERROR_START;
-              SERIAL_ERRORPGM(MSG_ERR_CHECKSUM_MISMATCH);
-              SERIAL_ERRORLN(gcode_LastN);
+              snprintf(json_str,JSONSIZE,"{%s:%l}",MSG_ERR_CHECKSUM_MISMATCH,gcode_LastN);
+              SERIAL_ERROR(json_str);
               FlushSerialRequestResend();
               serial_count = 0;
               return;
@@ -578,9 +557,8 @@ void get_command()
           }
           else
           {
-            SERIAL_ERROR_START;
-            SERIAL_ERRORPGM(MSG_ERR_NO_CHECKSUM);
-            SERIAL_ERRORLN(gcode_LastN);
+            snprintf(json_str,JSONSIZE,"{%s:%l}",MSG_ERR_NO_CHECKSUM,gcode_LastN);
+            SERIAL_ERROR(json_str);
             FlushSerialRequestResend();
             serial_count = 0;
             return;
@@ -593,9 +571,8 @@ void get_command()
         {
           if((strchr(cmdbuffer[bufindw], '*') != NULL))
           {
-            SERIAL_ERROR_START;
-            SERIAL_ERRORPGM(MSG_ERR_NO_LINENUMBER_WITH_CHECKSUM);
-            SERIAL_ERRORLN(gcode_LastN);
+            snprintf(json_str,JSONSIZE,"{%s:%l}",MSG_ERR_NO_LINENUMBER_WITH_CHECKSUM,gcode_LastN);
+            SERIAL_ERROR(json_str);
             serial_count = 0;
             return;
           }
@@ -615,7 +592,7 @@ void get_command()
               SERIAL_PROTOCOLLNPGM(MSG_OK);
             }
             else {
-              SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
+              SERIAL_ERRORPGM(MSG_ERR_STOPPED);
               LCD_MESSAGEPGM(MSG_STOPPED);
             }
             break;
@@ -624,7 +601,7 @@ void get_command()
           }
 
         }
-        bufindw = (bufindw + 1)%BUFSIZE;
+        bufindw = (bufindw + 1)%CMDBUFSIZE;
         buflen += 1;
       }
       serial_count = 0; //clear buffer
@@ -639,7 +616,7 @@ void get_command()
   if(!card.sdprinting || serial_count!=0){
     return;
   }
-  while( !card.eof()  && buflen < BUFSIZE) {
+  while( !card.eof()  && buflen < CMDBUFSIZE) {
     int16_t n=card.get();
     serial_char = (char)n;
     if(serial_char == '\n' ||
@@ -648,16 +625,15 @@ void get_command()
        serial_count >= (MAX_CMD_SIZE - 1)||n==-1)
     {
       if(card.eof()){
-        SERIAL_PROTOCOLLNPGM(MSG_FILE_PRINTED);
+        SERIAL_ECHOPGM(MSG_FILE_PRINTED);
         stoptime=millis();
         char time[30];
         unsigned long t=(stoptime-starttime)/1000;
         int hours, minutes;
         minutes=(t/60)%60;
         hours=t/60/60;
-        sprintf_P(time, PSTR("%i hours %i minutes"),hours, minutes);
-        SERIAL_ECHO_START;
-        SERIAL_ECHOLN(time);
+        sprintf_P(time, PSTR("\"%i hours %i minutes\""),hours, minutes);
+        SERIAL_ECHO(time);
         lcd_setstatus(time);
         card.printingHasFinished();
         card.checkautostart(true);
@@ -672,7 +648,7 @@ void get_command()
 //      if(!comment_mode){
         fromsd[bufindw] = true;
         buflen += 1;
-        bufindw = (bufindw + 1)%BUFSIZE;
+        bufindw = (bufindw + 1)%CMDBUFSIZE;
 //      }
       comment_mode = false; //for new command
       serial_count = 0; //clear buffer
@@ -1128,13 +1104,11 @@ void process_commands()
             run_z_probe();
             float z_at_xLeft_yBack = current_position[Z_AXIS];
 
-            SERIAL_PROTOCOLPGM("Bed x: ");
-            SERIAL_PROTOCOL(LEFT_PROBE_BED_POSITION);
-            SERIAL_PROTOCOLPGM(" y: ");
-            SERIAL_PROTOCOL(BACK_PROBE_BED_POSITION);
-            SERIAL_PROTOCOLPGM(" z: ");
-            SERIAL_PROTOCOL(current_position[Z_AXIS]);
-            SERIAL_PROTOCOLPGM("\n");
+            snprintf(json_str,JSONSIZE,"{\"bed probe 1\":{\"x\":%f,\"y\":%f,\"z\":%f}}", \
+              current_position[X_AXIS], \
+              current_position[Y_AXIS], \
+              current_position[Z_AXIS]);
+            SERIAL_ECHO(json_str);
 
             // prob 2
             do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
@@ -1142,13 +1116,11 @@ void process_commands()
             run_z_probe();
             float z_at_xLeft_yFront = current_position[Z_AXIS];
 
-            SERIAL_PROTOCOLPGM("Bed x: ");
-            SERIAL_PROTOCOL(LEFT_PROBE_BED_POSITION);
-            SERIAL_PROTOCOLPGM(" y: ");
-            SERIAL_PROTOCOL(FRONT_PROBE_BED_POSITION);
-            SERIAL_PROTOCOLPGM(" z: ");
-            SERIAL_PROTOCOL(current_position[Z_AXIS]);
-            SERIAL_PROTOCOLPGM("\n");
+            snprintf(json_str,JSONSIZE,"{\"bed probe 2\":{\"x\":%f,\"y\":%f,\"z\":%f}}", \
+              current_position[X_AXIS], \
+              current_position[Y_AXIS], \
+              current_position[Z_AXIS]);
+            SERIAL_ECHO(json_str);
 
             // prob 3
             do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
@@ -1157,13 +1129,11 @@ void process_commands()
             run_z_probe();
             float z_at_xRight_yFront = current_position[Z_AXIS];
 
-            SERIAL_PROTOCOLPGM("Bed x: ");
-            SERIAL_PROTOCOL(RIGHT_PROBE_BED_POSITION);
-            SERIAL_PROTOCOLPGM(" y: ");
-            SERIAL_PROTOCOL(FRONT_PROBE_BED_POSITION);
-            SERIAL_PROTOCOLPGM(" z: ");
-            SERIAL_PROTOCOL(current_position[Z_AXIS]);
-            SERIAL_PROTOCOLPGM("\n");
+            snprintf(json_str,JSONSIZE,"{\"bed probe 3\":{\"x\":%f,\"y\":%f,\"z\":%f}}", \
+              current_position[X_AXIS], \
+              current_position[Y_AXIS], \
+              current_position[Z_AXIS]);
+            SERIAL_ECHO(json_str);
 
             clean_up_after_endstop_move();
 
@@ -1198,13 +1168,11 @@ void process_commands()
             feedrate = homing_feedrate[Z_AXIS];
 
             run_z_probe();
-            SERIAL_PROTOCOLPGM("Bed Position X: ");
-            SERIAL_PROTOCOL(current_position[X_AXIS]);
-            SERIAL_PROTOCOLPGM(" Y: ");
-            SERIAL_PROTOCOL(current_position[Y_AXIS]);
-            SERIAL_PROTOCOLPGM(" Z: ");
-            SERIAL_PROTOCOL(current_position[Z_AXIS]);
-            SERIAL_PROTOCOLPGM("\n");
+            snprintf(json_str,JSONSIZE,"{\"bed probe\":{\"x\":%f,\"y\":%f,\"z\":%f}}", \
+              current_position[X_AXIS], \
+              current_position[Y_AXIS], \
+              current_position[Z_AXIS]);
+            SERIAL_ECHO(json_str);
 
             clean_up_after_endstop_move();
 
@@ -1284,9 +1252,9 @@ void process_commands()
 
 #ifdef SDSUPPORT
     case 20: // M20 - list SD card
-      SERIAL_PROTOCOLLNPGM(MSG_BEGIN_FILE_LIST);
+      SERIAL_ECHOPGM(MSG_BEGIN_FILE_LIST);
       card.ls();
-      SERIAL_PROTOCOLLNPGM(MSG_END_FILE_LIST);
+      SERIAL_ECHOPGM(MSG_END_FILE_LIST);
       break;
     case 21: // M21 - init SD card
 
@@ -1376,9 +1344,8 @@ void process_commands()
       int sec,min;
       min=t/60;
       sec=t%60;
-      sprintf_P(time, PSTR("%i min, %i sec"), min, sec);
-      SERIAL_ECHO_START;
-      SERIAL_ECHOLN(time);
+      sprintf_P(time, PSTR("\"%i min, %i sec\""), min, sec);
+      SERIAL_ECHO(time);
       lcd_setstatus(time);
       autotempShutdown();
       }
@@ -1442,55 +1409,36 @@ void process_commands()
         break;
         }
       #if defined(TEMP_0_PIN) && TEMP_0_PIN > -1
-        SERIAL_PROTOCOLPGM("ok T:");
-        SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
-        SERIAL_PROTOCOLPGM(" /");
-        SERIAL_PROTOCOL_F(degTargetHotend(tmp_extruder),1);
-        #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-          SERIAL_PROTOCOLPGM(" B:");
-          SERIAL_PROTOCOL_F(degBed(),1);
-          SERIAL_PROTOCOLPGM(" /");
-          SERIAL_PROTOCOL_F(degTargetBed(),1);
-        #endif //TEMP_BED_PIN
-        for (int8_t cur_extruder = 0; cur_extruder < EXTRUDERS; ++cur_extruder) {
-          SERIAL_PROTOCOLPGM(" T");
-          SERIAL_PROTOCOL(cur_extruder);
-          SERIAL_PROTOCOLPGM(":");
-          SERIAL_PROTOCOL_F(degHotend(cur_extruder),1);
-          SERIAL_PROTOCOLPGM(" /");
-          SERIAL_PROTOCOL_F(degTargetHotend(cur_extruder),1);
-        }
+        SERIAL_PROTOCOLLNPGM(MSG_OK);
+        send_printer_state();
       #else
-        SERIAL_ERROR_START;
-        SERIAL_ERRORLNPGM(MSG_ERR_NO_THERMISTORS);
+        SERIAL_ERRORPGM(MSG_ERR_NO_THERMISTORS);
       #endif
 
-        SERIAL_PROTOCOLPGM(" @:");
-        SERIAL_PROTOCOL(getHeaterPower(tmp_extruder));
-
-        SERIAL_PROTOCOLPGM(" B@:");
-        SERIAL_PROTOCOL(getHeaterPower(-1));
+        snprintf(json_str,JSONSIZE,"{\"power\":{\"ext %i power\":%i,\"bed power\":%i}}", \
+        tmp_extruder+1, \
+        getHeaterPower(tmp_extruder), \
+        getHeaterPower(-1));
+        SERIAL_ECHO(json_str);
 
         #ifdef SHOW_TEMP_ADC_VALUES
           #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-            SERIAL_PROTOCOLPGM("    ADC B:");
-            SERIAL_PROTOCOL_F(degBed(),1);
-            SERIAL_PROTOCOLPGM("C->");
-            SERIAL_PROTOCOL_F(rawBedTemp()/OVERSAMPLENR,0);
+            snprintf(json_str,JSONSIZE,"{\"ADC\":{\"bed temp\":%.1f,\"raw temp/oversamplenr\":%.0f}}", \
+              degBed(), \
+              rawBedTemp()/OVERSAMPLENR);
+            SERIAL_ECHO(json_str);
           #endif
           for (int8_t cur_extruder = 0; cur_extruder < EXTRUDERS; ++cur_extruder) {
-            SERIAL_PROTOCOLPGM("  T");
-            SERIAL_PROTOCOL(cur_extruder);
-            SERIAL_PROTOCOLPGM(":");
-            SERIAL_PROTOCOL_F(degHotend(cur_extruder),1);
-            SERIAL_PROTOCOLPGM("C->");
-            SERIAL_PROTOCOL_F(rawHotendTemp(cur_extruder)/OVERSAMPLENR,0);
+            snprintf(json_str,JSONSIZE,"{\"ext %i temp\":%.1f,\"raw/oversamplenr\":%.0f}", \
+              cur_extruder, \
+              degHotend(cur_extruder), \
+              rawHotendTemp(cur_extruder)/OVERSAMPLENR);
+            SERIAL_ECHO(json_str);
           }
         #endif
-		
-        SERIAL_PROTOCOLLN("");
       return;
       break;
+
     case 109:
     {// M109 - Wait for extruder heater to reach target.
       if(setTargetedHotend(109)){
@@ -1543,23 +1491,19 @@ void process_commands()
       #endif //TEMP_RESIDENCY_TIME
           if( (millis() - codenum) > 1000UL )
           { //Print Temp Reading and remaining time every 1 second while heating up/cooling down
-            SERIAL_PROTOCOLPGM("T:");
-            SERIAL_PROTOCOL_F(degHotend(tmp_extruder),1);
-            SERIAL_PROTOCOLPGM(" E:");
-            SERIAL_PROTOCOL((int)tmp_extruder);
+            snprintf(json_str,JSONSIZE,"{\"ext %hhu temp\":%.1f}",tmp_extruder,degHotend(tmp_extruder));
+            SERIAL_ECHO(json_str);
             #ifdef TEMP_RESIDENCY_TIME
-              SERIAL_PROTOCOLPGM(" W:");
               if(residencyStart > -1)
               {
                  codenum = ((TEMP_RESIDENCY_TIME * 1000UL) - (millis() - residencyStart)) / 1000UL;
-                 SERIAL_PROTOCOLLN( codenum );
+                 snprintf(json_str,JSONSIZE,"{\"time remaining\":%lu}",codenum);
+                 SERIAL_ECHO(json_str);
               }
               else
               {
-                 SERIAL_PROTOCOLLN( "?" );
+                 SERIAL_ECHOPGM("{\"echo\":{\"time remaining\":\"?\"}}");
               }
-            #else
-              SERIAL_PROTOCOLLN("");
             #endif
             codenum = millis();
           }
@@ -1602,13 +1546,11 @@ void process_commands()
           if(( millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
           {
             float tt=degHotend(active_extruder);
-            SERIAL_PROTOCOLPGM("T:");
-            SERIAL_PROTOCOL(tt);
-            SERIAL_PROTOCOLPGM(" E:");
-            SERIAL_PROTOCOL((int)active_extruder);
-            SERIAL_PROTOCOLPGM(" B:");
-            SERIAL_PROTOCOL_F(degBed(),1);
-            SERIAL_PROTOCOLLN("");
+            snprintf(json_str,JSONSIZE,"{\"ext %hhu temp\":%.1f,\"bed temp\":%.1f}", \
+              active_extruder, \
+              degHotend(active_extruder), \
+              degBed());
+            SERIAL_ECHO(json_str);
             codenum = millis();
           }
           manage_heater();
@@ -1766,7 +1708,7 @@ void process_commands()
       }
       break;
     case 115: // M115
-      SERIAL_PROTOCOLPGM(MSG_M115_REPORT);
+      SERIAL_ECHOPGM(MSG_M115_REPORT);
       break;
     case 117: // M117 display message
       starpos = (strchr(strchr_pointer + 5,'*'));
@@ -1775,27 +1717,20 @@ void process_commands()
       lcd_setstatus(strchr_pointer + 5);
       break;
     case 114: // M114
-      SERIAL_PROTOCOLPGM("X:");
-      SERIAL_PROTOCOL(current_position[X_AXIS]);
-      SERIAL_PROTOCOLPGM("Y:");
-      SERIAL_PROTOCOL(current_position[Y_AXIS]);
-      SERIAL_PROTOCOLPGM("Z:");
-      SERIAL_PROTOCOL(current_position[Z_AXIS]);
-      SERIAL_PROTOCOLPGM("J:");
-      SERIAL_PROTOCOL(current_position[J_AXIS]);
-      SERIAL_PROTOCOLPGM("E:");
-      SERIAL_PROTOCOL(current_position[E_AXIS]);
+      snprintf(json_str,JSONSIZE,"{\"pos\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f,\"j\":%.2f,\"e\":%.2f}}", \
+        current_position[X_AXIS], \
+        current_position[Y_AXIS], \
+        current_position[Z_AXIS], \
+        current_position[J_AXIS], \
+        current_position[E_AXIS]);
+      SERIAL_ECHO(json_str);
 
-      SERIAL_PROTOCOLPGM(MSG_COUNT_X);
-      SERIAL_PROTOCOL(float(st_get_position(X_AXIS))/axis_steps_per_unit[X_AXIS]);
-      SERIAL_PROTOCOLPGM("Y:");
-      SERIAL_PROTOCOL(float(st_get_position(Y_AXIS))/axis_steps_per_unit[Y_AXIS]);
-      SERIAL_PROTOCOLPGM("Z:");
-      SERIAL_PROTOCOL(float(st_get_position(Z_AXIS))/axis_steps_per_unit[Z_AXIS]);
-      SERIAL_PROTOCOLPGM("J:");
-      SERIAL_PROTOCOL(float(st_get_position(J_AXIS))/axis_steps_per_unit[J_AXIS]);
-
-      SERIAL_PROTOCOLLN("");
+      snprintf(json_str,JSONSIZE,"{\"steps\"{\"x\":%l,\"y\":%l,\"z\":%l,\"j\":%l}}", \
+        st_get_position(X_AXIS), \
+        st_get_position(Y_AXIS), \
+        st_get_position(Z_AXIS), \
+        st_get_position(J_AXIS));
+      SERIAL_ECHO(json_str);
       break;
     case 120: // M120
       enable_endstops(false) ;
@@ -1804,39 +1739,58 @@ void process_commands()
       enable_endstops(true) ;
       break;
     case 119: // M119
-    SERIAL_PROTOCOLLN(MSG_M119_REPORT);
+      SERIAL_PROTOCOLLNPGM(MSG_M119_REPORT);
+      SERIAL_ECHO_START;
+      SERIAL_PROTOCOLPGM("{\"endstop status\":{");
+      comma = false;
       #if defined(X_MIN_PIN) && X_MIN_PIN > -1
         SERIAL_PROTOCOLPGM(MSG_X_MIN);
-        SERIAL_PROTOCOLLN(((READ(X_MIN_PIN)^X_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        SERIAL_PROTOCOL(((READ(X_MIN_PIN)^X_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        comma = true;
       #endif
       #if defined(X_MAX_PIN) && X_MAX_PIN > -1
+        if(comma) SERIAL_PROTOCOLPGM(",");
         SERIAL_PROTOCOLPGM(MSG_X_MAX);
-        SERIAL_PROTOCOLLN(((READ(X_MAX_PIN)^X_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        SERIAL_PROTOCOL(((READ(X_MAX_PIN)^X_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        comma = true;
       #endif
       #if defined(Y_MIN_PIN) && Y_MIN_PIN > -1
+        if(comma) SERIAL_PROTOCOLPGM(",");
         SERIAL_PROTOCOLPGM(MSG_Y_MIN);
-        SERIAL_PROTOCOLLN(((READ(Y_MIN_PIN)^Y_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        SERIAL_PROTOCOL(((READ(Y_MIN_PIN)^Y_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        comma = true;
       #endif
       #if defined(Y_MAX_PIN) && Y_MAX_PIN > -1
+        if(comma) SERIAL_PROTOCOLPGM(",");
         SERIAL_PROTOCOLPGM(MSG_Y_MAX);
-        SERIAL_PROTOCOLLN(((READ(Y_MAX_PIN)^Y_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        SERIAL_PROTOCOL(((READ(Y_MAX_PIN)^Y_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        comma = true;
       #endif
       #if defined(Z_MIN_PIN) && Z_MIN_PIN > -1
+        if(comma) SERIAL_PROTOCOLPGM(",");
         SERIAL_PROTOCOLPGM(MSG_Z_MIN);
-        SERIAL_PROTOCOLLN(((READ(Z_MIN_PIN)^Z_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        SERIAL_PROTOCOL(((READ(Z_MIN_PIN)^Z_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        comma = true;
       #endif
       #if defined(Z_MAX_PIN) && Z_MAX_PIN > -1
+        if(comma) SERIAL_PROTOCOLPGM(",");
         SERIAL_PROTOCOLPGM(MSG_Z_MAX);
-        SERIAL_PROTOCOLLN(((READ(Z_MAX_PIN)^Z_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        SERIAL_PROTOCOL(((READ(Z_MAX_PIN)^Z_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        comma = true;
       #endif
       #if defined(J_MIN_PIN) && J_MIN_PIN > -1
+        if(comma) SERIAL_PROTOCOLPGM(",");
         SERIAL_PROTOCOLPGM(MSG_J_MIN);
-        SERIAL_PROTOCOLLN(((READ(J_MIN_PIN)^J_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        SERIAL_PROTOCOL(((READ(J_MIN_PIN)^J_MIN_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        comma = true;
       #endif
       #if defined(J_MAX_PIN) && J_MAX_PIN > -1
+        if(comma) SERIAL_PROTOCOLPGM(",");
         SERIAL_PROTOCOLPGM(MSG_J_MAX);
-        SERIAL_PROTOCOLLN(((READ(J_MAX_PIN)^J_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
+        SERIAL_PROTOCOL(((READ(J_MAX_PIN)^J_MAX_ENDSTOP_INVERTING)?MSG_ENDSTOP_HIT:MSG_ENDSTOP_OPEN));
       #endif
+      SERIAL_PROTOCOLPGM("}}");
+      SERIAL_MSG_END;
       break;
       //TODO: update for all axis, use for loop
     case 201: // M201
@@ -1930,14 +1884,12 @@ void process_commands()
           case 0: autoretract_enabled=false;retracted=false;break;
           case 1: autoretract_enabled=true;retracted=false;break;
           default:
-            SERIAL_ECHO_START;
-            SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);
-            SERIAL_ECHO(cmdbuffer[bufindr]);
-            SERIAL_ECHOLNPGM("\"");
+            snprintf(json_str,JSONSIZE,"{%s:%s}",MSG_UNKNOWN_COMMAND,cmdbuffer[bufindr]);
+            SERIAL_ECHO(json_str);
         }
       }
-
-    }break;
+    }
+    break;
     #endif // FWRETRACT
     #if EXTRUDERS > 1
     case 218: // M218 - set hotend offset (in mm), T<extruder_number> X<offset_on_X> Y<offset_on_Y>
@@ -1960,20 +1912,22 @@ void process_commands()
       }
       #endif       
       SERIAL_ECHO_START;
-      SERIAL_ECHOPGM(MSG_HOTEND_OFFSET);
-      for(tmp_extruder = 0; tmp_extruder < EXTRUDERS; tmp_extruder++)
+      snprintf(json_str,JSONSIZE,"{%s:{\"ext 1\":{ \"x\":%.1f,\"y\":%.1f}", \
+        MSG_HOTEND_OFFSET, \
+        extruder_offset[X_AXIS][0], \
+        extruder_offset[Y_AXIS][0]);
+      SERIAL_PROTOCOL(json_str);
+      for(tmp_extruder = 1; tmp_extruder < EXTRUDERS; tmp_extruder++)
       {
-         SERIAL_ECHO(" ");
-         SERIAL_ECHO(extruder_offset[X_AXIS][tmp_extruder]);
-         SERIAL_ECHO(",");
-         SERIAL_ECHO(extruder_offset[Y_AXIS][tmp_extruder]);
-      #ifdef DUAL_X_CARRIAGE
-         SERIAL_ECHO(",");
-         SERIAL_ECHO(extruder_offset[Z_AXIS][tmp_extruder]);
-      #endif
+        snprintf(json_str,JSONSIZE,",\"ext %i\":{\"x\":%.1f,\"y\":%.1f}", \
+          extruder_offset[X_AXIS][tmp_extruder], \
+          extruder_offset[Y_AXIS][tmp_extruder]);
+         SERIAL_PROTOCOL(json_str);
       }
-      SERIAL_ECHOLN("");
-    }break;
+      SERIAL_PROTOCOL("}}");
+      SERIAL_MSG_END;
+    }
+    break;
     #endif
     case 220: // M220 S<factor in percent>- set speed factor override percentage
     {
@@ -2012,19 +1966,14 @@ void process_commands()
 #endif
           }
           else {
-            SERIAL_ECHO_START;
-            SERIAL_ECHO("Servo ");
-            SERIAL_ECHO(servo_index);
-            SERIAL_ECHOLN(" out of range");
+            snprintf(json_str,JSONSIZE,"\"Servo %i out of range\"",servo_index);
+            SERIAL_ERROR(json_str);
           }
         }
         else if (servo_index >= 0) {
-          SERIAL_PROTOCOL(MSG_OK);
-          SERIAL_PROTOCOL(" Servo ");
-          SERIAL_PROTOCOL(servo_index);
-          SERIAL_PROTOCOL(": ");
-          SERIAL_PROTOCOL(servos[servo_index].read());
-          SERIAL_PROTOCOLLN("");
+          SERIAL_PROTOCOLLNPGM(MSG_OK);
+          snprintf(json_str,JSONSIZE,"{\"servo %i\":%i}",servo_index,servos[servo_index].read());
+          SERIAL_ECHO(json_str);
         }
       }
       break;
@@ -2065,19 +2014,18 @@ void process_commands()
         #endif
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
-        SERIAL_PROTOCOL(" p:");
-        SERIAL_PROTOCOL(Kp);
-        SERIAL_PROTOCOL(" i:");
-        SERIAL_PROTOCOL(unscalePID_i(Ki));
-        SERIAL_PROTOCOL(" d:");
-        SERIAL_PROTOCOL(unscalePID_d(Kd));
+        SERIAL_PROTOCOLLNPGM(MSG_OK);
+        SERIAL_ECHO_START;
+        SERIAL_PROTOCOLPGM("{\"nozzle pid\":{");
+        SERIAL_ECHOPAIR("\"p\":",Kp);
+        SERIAL_ECHOPAIR(",\"i\":",unscalePID_i(Ki));
+        SERIAL_ECHOPAIR(",\"d\":",unscalePID_d(Kd));
         #ifdef PID_ADD_EXTRUSION_RATE
-        SERIAL_PROTOCOL(" c:");
+        SERIAL_ECHOPAIR("\"c\":",Kc);
         //Kc does not have scaling applied above, or in resetting defaults
-        SERIAL_PROTOCOL(Kc);
         #endif
-        SERIAL_PROTOCOLLN("");
+        SERIAL_PROTOCOL("}}");
+        SERIAL_MSG_END;
       }
       break;
     #endif //PIDTEMP
@@ -2089,14 +2037,14 @@ void process_commands()
         if(code_seen('D')) bedKd = scalePID_d(code_value());
 
         updatePID();
-        SERIAL_PROTOCOL(MSG_OK);
-        SERIAL_PROTOCOL(" p:");
-        SERIAL_PROTOCOL(bedKp);
-        SERIAL_PROTOCOL(" i:");
-        SERIAL_PROTOCOL(unscalePID_i(bedKi));
-        SERIAL_PROTOCOL(" d:");
-        SERIAL_PROTOCOL(unscalePID_d(bedKd));
-        SERIAL_PROTOCOLLN("");
+        SERIAL_PROTOCOLLNPGM(MSG_OK);
+        SERIAL_ECHO_START;
+        SERIAL_PROTOCOLPGM("{\"bed pid\":{");
+        SERIAL_ECHOPAIR("\"p\":",bedKp);
+        SERIAL_ECHOPAIR(",\"i\":",unscalePID_i(bedKi));
+        SERIAL_ECHOPAIR(",\"d\":",unscalePID_d(bedKd));
+        SERIAL_PROTOCOL("}}");
+        SERIAL_MSG_END;
       }
       break;
     #endif //PIDTEMP
@@ -2124,12 +2072,11 @@ void process_commands()
 #ifdef DOGLCD
     case 250: // M250  Set LCD contrast value: C<value> (value 0..63)
      {
-	  if (code_seen('C')) {
-	   lcd_setcontrast( ((int)code_value())&63 );
-          }
-          SERIAL_PROTOCOLPGM("lcd contrast value: ");
-          SERIAL_PROTOCOL(lcd_contrast);
-          SERIAL_PROTOCOLLN("");
+       if (code_seen('C')) {
+         lcd_setcontrast( ((int)code_value())&63 );
+       }
+       snprintf(json_str,JSONSIZE,"{\"lcd contrast\":%i}",lcd_contrast);
+       SERIAL_ECHO(json_str);
      }
     break;
 #endif
@@ -2350,17 +2297,14 @@ void process_commands()
 
           if (code_seen('R'))
             duplicate_extruder_temp_offset = code_value();
-            
-          SERIAL_ECHO_START;
-          SERIAL_ECHOPGM(MSG_HOTEND_OFFSET);
-          SERIAL_ECHO(" ");
-          SERIAL_ECHO(extruder_offset[X_AXIS][0]);
-          SERIAL_ECHO(",");
-          SERIAL_ECHO(extruder_offset[Y_AXIS][0]);
-          SERIAL_ECHO(" ");
-          SERIAL_ECHO(duplicate_extruder_x_offset);
-          SERIAL_ECHO(",");
-          SERIAL_ECHOLN(extruder_offset[Y_AXIS][1]);
+
+          snprintf(json_str,JSONSIZE,"{%s:{\"ext 1\":{ \"x\":%.1f,\"y\":%.1f},\"ext 2\":{ \"x\":%.1f,\"y\":%.1f}}", \
+            MSG_HOTEND_OFFSET, \
+            extruder_offset[X_AXIS][0], \
+            extruder_offset[Y_AXIS][0], \
+            duplicate_extruder_x_offset, \
+            extruder_offset[Y_AXIS][1]);
+          SERIAL_ECHO(json_str);
         }
         else if (dual_x_carriage_mode != DXC_FULL_CONTROL_MODE && dual_x_carriage_mode != DXC_AUTO_PARK_MODE)
         {
@@ -2434,10 +2378,7 @@ void process_commands()
   {
     tmp_extruder = code_value();
     if(tmp_extruder >= EXTRUDERS) {
-      SERIAL_ECHO_START;
-      SERIAL_ECHO("T");
-      SERIAL_ECHO(tmp_extruder);
-      SERIAL_ECHOLN(MSG_INVALID_EXTRUDER);
+      SERIAL_ERROR(MSG_INVALID_EXTRUDER);
     }
     else {
       boolean make_move = false;
@@ -2513,12 +2454,7 @@ void process_commands()
         // Set the new active extruder and position
         active_extruder = tmp_extruder;
       #endif //else DUAL_X_CARRIAGE
-	  
-	 
-	  /**SERIAL_ECHO("Marlin_main plan_set_position was sent: "); 
-	  SERIAL_ECHO(" X:"); SERIAL_ECHO(current_position[X_AXIS]);
-	  SERIAL_ECHO(" Y:"); SERIAL_ECHO(current_position[Y_AXIS]);
-	  SERIAL_ECHO(" Z:"); SERIAL_ECHOLN(current_position[Z_AXIS]);**/
+
 	  // TESTING
 	  #ifdef DELTA
 	  calculate_delta(current_position);
@@ -2534,18 +2470,15 @@ void process_commands()
         }
       }
       #endif
-      SERIAL_ECHO_START;
-      SERIAL_ECHO(MSG_ACTIVE_EXTRUDER);
-      SERIAL_PROTOCOLLN((int)active_extruder);
+      snprintf(json_str,JSONSIZE,"{%s:%hhu}",MSG_ACTIVE_EXTRUDER,active_extruder);
+      SERIAL_ECHO(json_str);
     }
   }
 
   else
   {
-    SERIAL_ECHO_START;
-    SERIAL_ECHOPGM(MSG_UNKNOWN_COMMAND);
-    SERIAL_ECHO(cmdbuffer[bufindr]);
-    SERIAL_ECHOLNPGM("\"");
+    snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_UNKNOWN_COMMAND,cmdbuffer[bufindr]);
+    SERIAL_ERROR(json_str);
   }
 
   ClearToSend();
@@ -2555,8 +2488,8 @@ void FlushSerialRequestResend()
 {
   //char cmdbuffer[bufindr][100]="Resend:";
   MYSERIAL.flush();
-  SERIAL_PROTOCOLPGM(MSG_RESEND);
-  SERIAL_PROTOCOLLN(gcode_LastN + 1);
+  snprintf(json_str,JSONSIZE,"{%s:%i}",MSG_RESEND,gcode_LastN + 1);
+  SERIAL_ECHO(json_str);
   ClearToSend();
 }
 
@@ -2680,15 +2613,6 @@ void calculate_delta(float cartesian[3])
                        - sq(DELTA_TOWER3_X-cartesian[X_AXIS])
                        - sq(DELTA_TOWER3_Y-cartesian[Y_AXIS])
                        ) + cartesian[Z_AXIS];
- /**
-  SERIAL_ECHOPGM("Marlin_main calculate_delta: cartesian x="); SERIAL_ECHO(cartesian[X_AXIS]);
-  SERIAL_ECHOPGM(" y="); SERIAL_ECHO(cartesian[Y_AXIS]);
-  SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(cartesian[Z_AXIS]);
-
-  SERIAL_ECHOPGM("delta x="); SERIAL_ECHO(delta[X_AXIS]);
-  SERIAL_ECHOPGM(" y="); SERIAL_ECHO(delta[Y_AXIS]);
-  SERIAL_ECHOPGM(" z="); SERIAL_ECHOLN(delta[Z_AXIS]);
-**/
 }
 #endif
 
@@ -2702,12 +2626,7 @@ void prepare_move()
   for (int8_t i=0; i < NUM_AXIS; i++) {
     difference[i] = destination[i] - current_position[i];
   }
-  /**
-  SERIAL_ECHO("Marlin_main prepare_move():");
-  SERIAL_ECHOPGM(" x diff: "); SERIAL_ECHO(difference[0]);
-  SERIAL_ECHOPGM(" y diff: "); SERIAL_ECHO(difference[1]);
-  SERIAL_ECHOPGM(" z diff: "); SERIAL_ECHOLN(difference[2]);
-  **/
+
   float cartesian_mm = sqrt(sq(difference[X_AXIS]) +
                             sq(difference[Y_AXIS]) +
                             sq(difference[Z_AXIS]));
@@ -2716,9 +2635,6 @@ void prepare_move()
   if (cartesian_mm < 0.000001) { return; }
   float seconds = 6000 * cartesian_mm / feedrate / feedmultiply;
   int steps = max(1, int(DELTA_SEGMENTS_PER_SECOND * seconds));
-  // SERIAL_ECHOPGM("mm="); SERIAL_ECHO(cartesian_mm);
-  // SERIAL_ECHOPGM(" seconds="); SERIAL_ECHO(seconds);
-  // SERIAL_ECHOPGM(" steps="); SERIAL_ECHOLN(steps);
   for (int s = 1; s <= steps; s++) {
     float fraction = float(s) / float(steps);
     for(int8_t i=0; i < NUM_AXIS; i++) {
@@ -2911,31 +2827,28 @@ void send_printer_state()
   {
   // {"state":{"t":{"ext1":#,"ext2":#,"bed":#},"pos":{"X":#,"Y":#,"Z":#,"J":#},
   //  "E0_remaining":#,"E1_remaining":#}}
-    SERIAL_ECHO("{\"json\":{");
-    SERIAL_ECHO("\"state\":{");
-    SERIAL_ECHO("\"t\":{");
-    SERIAL_ECHOPAIR("\"ext1\":",degHotend(0));
+    SERIAL_ECHO_START;
+    snprintf(json_str,JSONSIZE,"{\"state\":{\"t\":{\"ext 1 temp\":%.1f",degHotend(0));
+    SERIAL_PROTOCOL(json_str);
     #if EXTRUDERS > 1
-      SERIAL_ECHOPAIR(",\"ext2\":",degHotend(1));
+      snprintf(json_str,JSONSIZE,",\"ext 2 temp\":%.1f",degHotend(1));
+      SERIAL_PROTOCOL(json_str);
       #if EXTRUDERS > 2
-        SERIAL_ECHOPAIR(",\"ext3\":",degHotend(2));
+        snprintf(json_str,",\"ext 3 temp\":%.1f",degHotend(2));
+        SERIAL_PROTOCOL(json_str);
       #endif
     #endif
-    SERIAL_ECHOPAIR(",\"bed\":",degBed());
-    SERIAL_ECHO("}"); // End t
-//    SERIAL_ECHOPAIR(", \"T_chamber\":",
-//    SERIAL_ECHOPAIR(", \"T_electronics\":",
-    SERIAL_ECHO("\"pos\":{");
-    SERIAL_ECHOPAIR("\"X\":",current_position[X_AXIS]);
-    SERIAL_ECHOPAIR(",\"Y\":",current_position[Y_AXIS]);
-    SERIAL_ECHOPAIR(",\"Z\":",current_position[Z_AXIS]);
-    SERIAL_ECHOPAIR(",\"J\":",current_position[J_AXIS]);
-    SERIAL_ECHO("}"); // End pos
-//   SERIAL_ECHOPAIR(", \"E0_filament_remaining\":",
-//   SERIAL_ECHOPAIR(", \"E1_filament_remaining\":",
-    SERIAL_ECHO("}"); // End state
-    SERIAL_ECHO("}"); // End json
-    SERIAL_ECHOLN("}"); // End json message
+    #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
+      snprintf(json_str,JSONSIZE,",bed\":%.1f}",degBed());
+      SERIAL_PROTOCOL(json_str);
+    #endif
+    snprintf(json_str,JSONSIZE,"},pos\":{\"X\":%.2f,\"Y\":%.2f,\"Z\":%.2f,\"J\":%.2f}}", \
+      current_position[X_AXIS], \
+      current_position[Y_AXIS], \
+      current_position[Z_AXIS], \
+      current_position[J_AXIS]);
+    SERIAL_PROTOCOL(json_str);
+    SERIAL_MSG_END;
     previous_millis_state = millis();
   }
 }
@@ -2956,8 +2869,7 @@ void kill()
 #if defined(PS_ON_PIN) && PS_ON_PIN > -1
   pinMode(PS_ON_PIN,INPUT);
 #endif
-  SERIAL_ERROR_START;
-  SERIAL_ERRORLNPGM(MSG_ERR_KILLED);
+  SERIAL_ERRORPGM(MSG_ERR_KILLED);
   LCD_ALERTMESSAGEPGM(MSG_KILLED);
   suicide();
   while(1) { /* Intentionally left empty */ } // Wait for reset
@@ -2969,8 +2881,7 @@ void Stop()
   if(Stopped == false) {
     Stopped = true;
     Stopped_gcode_LastN = gcode_LastN; // Save last g_code for restart
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM(MSG_ERR_STOPPED);
+    SERIAL_ERRORPGM(MSG_ERR_STOPPED);
     LCD_MESSAGEPGM(MSG_STOPPED);
   }
 }
@@ -3052,22 +2963,21 @@ bool setTargetedHotend(int code){
   if(code_seen('T')) {
     tmp_extruder = code_value();
     if(tmp_extruder >= EXTRUDERS) {
-      SERIAL_ECHO_START;
       switch(code){
         case 104:
-          SERIAL_ECHO(MSG_M104_INVALID_EXTRUDER);
+          snprintf(json_str,JSONSIZE,"{\"%s\":%i}",MSG_M104_INVALID_EXTRUDER,tmp_extruder);
           break;
         case 105:
-          SERIAL_ECHO(MSG_M105_INVALID_EXTRUDER);
+          snprintf(json_str,JSONSIZE,"{\"%s\":%i}",MSG_M105_INVALID_EXTRUDER,tmp_extruder);
           break;
         case 109:
-          SERIAL_ECHO(MSG_M109_INVALID_EXTRUDER);
+          snprintf(json_str,JSONSIZE,"{\"%s\":%i}",MSG_M109_INVALID_EXTRUDER,tmp_extruder);
           break;
         case 218:
-          SERIAL_ECHO(MSG_M218_INVALID_EXTRUDER);
+          snprintf(json_str,JSONSIZE,"{\"%s\":%i}",MSG_M218_INVALID_EXTRUDER,tmp_extruder);
           break;
       }
-      SERIAL_ECHOLN(tmp_extruder);
+      SERIAL_ERROR(json_str);
       return true;
     }
   }
@@ -3243,3 +3153,4 @@ void home_all()
   previous_millis_cmd = millis();
   endstops_hit_on_purpose();
 }
+

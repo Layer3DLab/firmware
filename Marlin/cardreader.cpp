@@ -7,6 +7,8 @@
 
 #ifdef SDSUPPORT
 
+extern char json_str[JSONSIZE];
+
 
 
 CardReader::CardReader()
@@ -79,9 +81,8 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
       {
         if(lsAction==LS_SerialPrint)
         {
-          SERIAL_ECHO_START;
-          SERIAL_ECHOLN(MSG_SD_CANT_OPEN_SUBDIR);
-          SERIAL_ECHOLN(lfilename);
+          snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_SD_CANT_OPEN_SUBDIR,lfilename);
+          SERIAL_ECHO(json_str);
         }
       }
       lsDive(path,dir);
@@ -114,8 +115,8 @@ void  CardReader::lsDive(const char *prepend,SdFile parent)
       createFilename(filename,p);
       if(lsAction==LS_SerialPrint)
       {
-        SERIAL_PROTOCOL(prepend);
-        SERIAL_PROTOCOLLN(filename);
+        snprintf(json_str,JSONSIZE,"\"%s%s\"",prepend,filename);
+        SERIAL_ECHO(json_str);
       }
       else if(lsAction==LS_Count)
       {
@@ -155,31 +156,27 @@ void CardReader::initsd()
 #endif
   {
     //if (!card.init(SPI_HALF_SPEED,SDSS))
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM(MSG_SD_INIT_FAIL);
+    SERIAL_ERRORPGM(MSG_SD_INIT_FAIL);
   }
   else if (!volume.init(&card))
   {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM(MSG_SD_VOL_INIT_FAIL);
+    SERIAL_ERRORPGM(MSG_SD_VOL_INIT_FAIL);
   }
   else if (!root.openRoot(&volume)) 
   {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM(MSG_SD_OPENROOT_FAIL);
+    SERIAL_ERRORPGM(MSG_SD_OPENROOT_FAIL);
   }
   else 
   {
     cardOK = true;
-    SERIAL_ECHO_START;
-    SERIAL_ECHOLNPGM(MSG_SD_CARD_OK);
+    SERIAL_ECHOPGM(MSG_SD_CARD_OK);
   }
   workDir=root;
   curDir=&root;
   /*
   if(!workDir.openRoot(&volume))
   {
-    SERIAL_ECHOLNPGM(MSG_SD_WORKDIR_FAIL);
+    SERIAL_ERRORPGM(MSG_SD_WORKDIR_FAIL);
   }
   */
   
@@ -189,7 +186,7 @@ void CardReader::setroot()
 {
   /*if(!workDir.openRoot(&volume))
   {
-    SERIAL_ECHOLNPGM(MSG_SD_WORKDIR_FAIL);
+    SERIAL_ERRORPGM(MSG_SD_WORKDIR_FAIL);
   }*/
   workDir=root;
   
@@ -243,24 +240,22 @@ void CardReader::openFile(char* name,bool read)
     while(dirname_start>0)
     {
       dirname_end=strchr(dirname_start,'/');
-      //SERIAL_ECHO("start:");SERIAL_ECHOLN((int)(dirname_start-name));
-      //SERIAL_ECHO("end  :");SERIAL_ECHOLN((int)(dirname_end-name));
       if(dirname_end>0 && dirname_end>dirname_start)
       {
         char subdirname[13];
         strncpy(subdirname, dirname_start, dirname_end-dirname_start);
         subdirname[dirname_end-dirname_start]=0;
-        SERIAL_ECHOLN(subdirname);
+        snprintf(json_str,JSONSIZE,"\"%s\"",subdirname);
+        SERIAL_ECHO(json_str);
         if(!myDir.open(curDir,subdirname,O_READ))
         {
-          SERIAL_PROTOCOLPGM(MSG_SD_OPEN_FILE_FAIL);
-          SERIAL_PROTOCOL(subdirname);
-          SERIAL_PROTOCOLLNPGM(".");
+          snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_SD_OPEN_FILE_FAIL,subdirname);
+          SERIAL_ERROR(json_str);
           return;
         }
         else
         {
-          //SERIAL_ECHOLN("dive ok");
+          //SERIAL_ECHO("\"dive ok\"");
         }
           
         curDir=&myDir; 
@@ -269,8 +264,6 @@ void CardReader::openFile(char* name,bool read)
       else // the reminder after all /fsa/fdsa/ is the filename
       {
         fname=dirname_start;
-        //SERIAL_ECHOLN("remaider");
-        //SERIAL_ECHOLN(fname);
         break;
       }
       
@@ -285,35 +278,30 @@ void CardReader::openFile(char* name,bool read)
     if (file.open(curDir, fname, O_READ)) 
     {
       filesize = file.fileSize();
-      SERIAL_PROTOCOLPGM(MSG_SD_FILE_OPENED);
-      SERIAL_PROTOCOL(fname);
-      SERIAL_PROTOCOLPGM(MSG_SD_SIZE);
-      SERIAL_PROTOCOLLN(filesize);
+      snprintf(json_str,JSONSIZE,"{%s:\"%s\",%s:%s}",MSG_SD_FILE_OPENED,fname,MSG_SD_SIZE,filesize);
       sdpos = 0;
       
-      SERIAL_PROTOCOLLNPGM(MSG_SD_FILE_SELECTED);
+      SERIAL_ECHOPGM(MSG_SD_FILE_SELECTED);
       lcd_setstatus(fname);
     }
     else
     {
-      SERIAL_PROTOCOLPGM(MSG_SD_OPEN_FILE_FAIL);
-      SERIAL_PROTOCOL(fname);
-      SERIAL_PROTOCOLLNPGM(".");
+      snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_SD_OPEN_FILE_FAIL,fname);
+      SERIAL_ERROR(json_str);
     }
   }
   else 
   { //write
     if (!file.open(curDir, fname, O_CREAT | O_APPEND | O_WRITE | O_TRUNC))
     {
-      SERIAL_PROTOCOLPGM(MSG_SD_OPEN_FILE_FAIL);
-      SERIAL_PROTOCOL(fname);
-      SERIAL_PROTOCOLLNPGM(".");
+      snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_SD_OPEN_FILE_FAIL,fname);
+      SERIAL_ERROR(json_str);
     }
     else
     {
       saving = true;
-      SERIAL_PROTOCOLPGM(MSG_SD_WRITE_TO_FILE);
-      SERIAL_PROTOCOLLN(name);
+      snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_SD_WRITE_TO_FILE,name);
+      SERIAL_ECHO(json_str);
       lcd_setstatus(fname);
     }
   }
@@ -339,24 +327,22 @@ void CardReader::removeFile(char* name)
     while(dirname_start>0)
     {
       dirname_end=strchr(dirname_start,'/');
-      //SERIAL_ECHO("start:");SERIAL_ECHOLN((int)(dirname_start-name));
-      //SERIAL_ECHO("end  :");SERIAL_ECHOLN((int)(dirname_end-name));
       if(dirname_end>0 && dirname_end>dirname_start)
       {
         char subdirname[13];
         strncpy(subdirname, dirname_start, dirname_end-dirname_start);
         subdirname[dirname_end-dirname_start]=0;
-        SERIAL_ECHOLN(subdirname);
+        snprintf(json_str,JSONSIZE,"\"%s\"",subdirname);
+        SERIAL_ECHO(json_str);
         if(!myDir.open(curDir,subdirname,O_READ))
         {
-          SERIAL_PROTOCOLPGM("open failed, File: ");
-          SERIAL_PROTOCOL(subdirname);
-          SERIAL_PROTOCOLLNPGM(".");
+          snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_SD_OPEN_FILE_FAIL,subdirname);
+          SERIAL_ERROR(json_str);
           return;
         }
         else
         {
-          //SERIAL_ECHOLN("dive ok");
+          //SERIAL_ECHOLN("\"dive ok\"");
         }
           
         curDir=&myDir; 
@@ -365,8 +351,6 @@ void CardReader::removeFile(char* name)
       else // the reminder after all /fsa/fdsa/ is the filename
       {
         fname=dirname_start;
-        //SERIAL_ECHOLN("remaider");
-        //SERIAL_ECHOLN(fname);
         break;
       }
       
@@ -378,15 +362,14 @@ void CardReader::removeFile(char* name)
   }
     if (file.remove(curDir, fname)) 
     {
-      SERIAL_PROTOCOLPGM("File deleted:");
-      SERIAL_PROTOCOL(fname);
+      snprintf(json_str,JSONSIZE,"{\"file deleted\":\"%s\"}",fname);
+      SERIAL_ECHO(json_str);
       sdpos = 0;
     }
     else
     {
-      SERIAL_PROTOCOLPGM("Deletion failed, File: ");
-      SERIAL_PROTOCOL(fname);
-      SERIAL_PROTOCOLLNPGM(".");
+      snprintf(json_str,JSONSIZE,"{\"failed to delete file\":\"%s\"}",fname);
+      SERIAL_ERROR(json_str);
     }
   
 }
@@ -394,13 +377,11 @@ void CardReader::removeFile(char* name)
 void CardReader::getStatus()
 {
   if(cardOK){
-    SERIAL_PROTOCOLPGM(MSG_SD_PRINTING_BYTE);
-    SERIAL_PROTOCOL(sdpos);
-    SERIAL_PROTOCOLPGM("/");
-    SERIAL_PROTOCOLLN(filesize);
+    snprintf(json_str,JSONSIZE,"{%s:\"%s/%s\"}",MSG_SD_PRINTING_BYTE,sdpos,filesize);
+    SERIAL_ECHO(json_str);
   }
   else{
-    SERIAL_PROTOCOLLNPGM(MSG_SD_NOT_PRINTING);
+    SERIAL_ERRORPGM(MSG_SD_NOT_PRINTING);
   }
 }
 void CardReader::write_command(char *buf)
@@ -421,8 +402,7 @@ void CardReader::write_command(char *buf)
   file.write(begin);
   if (file.writeError)
   {
-    SERIAL_ERROR_START;
-    SERIAL_ERRORLNPGM(MSG_SD_ERR_WRITE_TO_FILE);
+    SERIAL_ERRORPGM(MSG_SD_ERR_WRITE_TO_FILE);
   }
 }
 
@@ -502,7 +482,6 @@ uint16_t CardReader::getnrfilenames()
   nrFiles=0;
   curDir->rewind();
   lsDive("",*curDir);
-  //SERIAL_ECHOLN(nrFiles);
   return nrFiles;
 }
 
@@ -516,9 +495,8 @@ void CardReader::chdir(const char * relpath)
   
   if(!newfile.open(*parent,relpath, O_READ))
   {
-   SERIAL_ECHO_START;
-   SERIAL_ECHOPGM(MSG_SD_CANT_ENTER_SUBDIR);
-   SERIAL_ECHOLN(relpath);
+   snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_SD_CANT_ENTER_SUBDIR,relpath);
+   SERIAL_ERROR(json_str);
   }
   else
   {
