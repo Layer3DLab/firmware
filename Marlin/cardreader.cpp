@@ -278,7 +278,7 @@ void CardReader::openFile(char* name,bool read)
     if (file.open(curDir, fname, O_READ)) 
     {
       filesize = file.fileSize();
-      snprintf(json_str,JSONSIZE,"{%s:\"%s\",%s:%s}",MSG_SD_FILE_OPENED,fname,MSG_SD_SIZE,filesize);
+      snprintf(json_str,JSONSIZE,"{%s:\"%s\",%s:\"%s\"}",MSG_SD_FILE_OPENED,fname,MSG_SD_SIZE,filesize);
       sdpos = 0;
       
       SERIAL_ECHOPGM(MSG_SD_FILE_SELECTED);

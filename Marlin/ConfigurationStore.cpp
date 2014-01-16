@@ -5,7 +5,11 @@
 #include "ConfigurationStore.h"
 
 extern char json_str[JSONSIZE];
-extern unsigned long starttime;
+long longnumber = 158;
+unsigned unsgnd = 15;
+unsigned long unsgndlong = 1587;
+uint32_t uint32 = 1587;
+uint8_t uint8 = 15;
 
 void _EEPROM_writeData(int &pos, uint8_t* value, uint8_t size)
 {
@@ -100,8 +104,6 @@ void Config_StoreSettings()
 #ifndef DISABLE_M503
 void Config_PrintSettings()
 {  // Always have this function, even with EEPROM_SETTINGS disabled, the current values will be shown
-    starttime = 353;
-    snprintf(json_str,JSONSIZE,"{\"TESTING UNSGND LONGs IN PRINTS\":%lu}",starttime);
     SERIAL_ECHO(json_str);
     SERIAL_ECHO_START;
     SERIAL_PROTOCOLPGM("{\"steps/unit\":{");

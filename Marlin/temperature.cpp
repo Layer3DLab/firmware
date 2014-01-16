@@ -238,24 +238,33 @@ void PID_autotune(float temp, int extruder, int ncycles)
             if(bias > (extruder<0?(MAX_BED_POWER):(PID_MAX))/2) d = (extruder<0?(MAX_BED_POWER):(PID_MAX)) - 1 - bias;
             else d = bias;
 
-            snprintf(json_str,JSONSIZE,"{\"pid autotune\":{\"bias\":%.2f,\"d\":%.2f,\"min\":%.1f,\"max\":%.1f}}", \
-              bias, \
-              d, \
-              min, \
-              max);
-            SERIAL_ECHO(json_str);
+            SERIAL_ECHO_START;
+            SERIAL_PROTOCOLPGM("{\"pid autotune\":{");
+            SERIAL_PROTOCOLPGM("\"bias\":");
+            SERIAL_PROTOCOL(bias);
+            SERIAL_PROTOCOLPGM(",\"d\":");
+            SERIAL_PROTOCOL(d);
+            SERIAL_PROTOCOLPGM(",\"min\":");
+            SERIAL_PROTOCOL(min);
+            SERIAL_PROTOCOLPGM(",\"max\":");
+            SERIAL_PROTOCOL(max);
+            SERIAL_PROTOCOLPGM("}}");
+            SERIAL_MSG_END;
             if(cycles > 2) {
               Ku = (4.0*d)/(3.14159*(max-min)/2.0);
               Tu = ((float)(t_low + t_high)/1000.0);
               Kp = 0.6*Ku;
               Ki = 2*Kp/Tu;
               Kd = Kp*Tu/8;
-              snprintf(json_str,JSONSIZE,"{\"pid autotune\":{\"Ku\":%.1f,\"Tu\":%.1f,\"Kp\":%.1f,\"Ki\":%.1f,\"Kd\":%.1f}}", \
-                Ku, \
-                Tu, \
-                Kp, \
-                Ki, \
-                Kd);
+              SERIAL_ECHO_START;
+              SERIAL_PROTOCOLPGM("{\"pid autotune\":{");
+              SERIAL_ECHOPAIR("\"Ku\":",Ku);
+              SERIAL_ECHOPAIR(",\"Tu\":",Tu);
+              SERIAL_ECHOPAIR(",\"Kp\":",Kp);
+              SERIAL_ECHOPAIR(",\"Ki\":",Ki);
+              SERIAL_ECHOPAIR(",\"Kd\":",Kd);
+              SERIAL_PROTOCOLPGM("}}");
+              SERIAL_MSG_END;
             }
           }
           if (extruder<0)
@@ -275,16 +284,15 @@ void PID_autotune(float temp, int extruder, int ncycles)
       int p;
 
       SERIAL_ECHO_START;
-			snprintf(json_str,JSONSIZE,"{\"pid autotune\":{\"target temp (C)\":%.1f,",input);
-			SERIAL_PROTOCOL(json_str);
+      SERIAL_PROTOCOLPGM("{\"pid autotune\":{");
+      SERIAL_ECHOPAIR("\"target temp (C)\":",input);
       if (extruder<0){
         p=soft_pwm_bed;
-        snprintf(json_str,JSONSIZE,"\"bed pwm\":%i}}",p);
+        snprintf(json_str,JSONSIZE,",\"bed pwm\":%i}}",p);
       }else{
         p=soft_pwm[extruder];
-        snprintf(json_str,JSONSIZE,"\"nozzle pwm\":%i}}",p);
+        snprintf(json_str,JSONSIZE,",\"nozzle pwm\":%i}}",p);
       }
-
       SERIAL_PROTOCOL(json_str);
       SERIAL_MSG_END;
 
@@ -438,19 +446,16 @@ void manage_heater()
           pid_output = constrain(target_temperature[e], 0, PID_MAX);
     #endif //PID_OPENLOOP
     #ifdef PID_DEBUG
-    snprintf(json_str,JSONSIZE,"{\"pid debug\":{\"input\":%f,\"output\":%f,\"p\":%.2f,\"i\":%.2f")
-    SERIAL_ECHO_START(" PIDDEBUG ");
-    SERIAL_ECHO(e);
-    SERIAL_ECHO(": Input ");
-    SERIAL_ECHO(pid_input);
-    SERIAL_ECHO(" Output ");
-    SERIAL_ECHO(pid_output);
-    SERIAL_ECHO(" pTerm ");
-    SERIAL_ECHO(pTerm[e]);
-    SERIAL_ECHO(" iTerm ");
-    SERIAL_ECHO(iTerm[e]);
-    SERIAL_ECHO(" dTerm ");
-    SERIAL_ECHOLN(dTerm[e]);  
+    SERIAL_ECHO_START;
+    SERIAL_PROTOCOLPGM("{\"pid debug\":{");
+    SERIAL_ECHOPAIR("\"nozzle\":",e);
+    SERIAL_ECHOPAIR(",\"input\":",pid_input);
+    SERIAL_ECHOPAIR(",\"output\":",pid_output);
+    SERIAL_ECHOPAIR(",\"p\":",pTerm[e]);
+    SERIAL_ECHOPAIR(",\"i\":",iTerm[e]);
+    SERIAL_ECHOPAIR(",\"d\":",dTerm[e]);
+    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_MSG_END;
     #endif //PID_DEBUG
   #else /* PID off */
     pid_output = 0;

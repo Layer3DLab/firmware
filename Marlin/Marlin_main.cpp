@@ -282,12 +282,16 @@ bool comma = false;
 void get_arc_coordinates();
 bool setTargetedHotend(int code);
 
+void serial_echopair_P(const char *s_P, int v)
+    { serialprintPGM(s_P); SERIAL_PROTOCOL(v); }
+void serial_echopair_P(const char *s_P, long v)
+    { serialprintPGM(s_P); SERIAL_PROTOCOL(v); }
 void serial_echopair_P(const char *s_P, float v)
-    { serialprintPGM(s_P); SERIAL_ECHO(v); }
+    { serialprintPGM(s_P); SERIAL_PROTOCOL(v); }
 void serial_echopair_P(const char *s_P, double v)
-    { serialprintPGM(s_P); SERIAL_ECHO(v); }
+    { serialprintPGM(s_P); SERIAL_PROTOCOL(v); }
 void serial_echopair_P(const char *s_P, unsigned long v)
-    { serialprintPGM(s_P); SERIAL_ECHO(v); }
+    { serialprintPGM(s_P); SERIAL_PROTOCOL(v); }
 
 extern "C"{
   extern unsigned int __bss_end;
@@ -532,7 +536,7 @@ void get_command()
           strchr_pointer = strchr(cmdbuffer[bufindw], 'N');
           gcode_N = (strtol(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL, 10));
           if(gcode_N != gcode_LastN+1 && (strstr_P(cmdbuffer[bufindw], PSTR("M110")) == NULL) ) {
-            snprintf(json_str,JSONSIZE,"{%s:%l}",MSG_ERR_LINE_NO,gcode_LastN);
+            snprintf(json_str,JSONSIZE,"{%s:%li}",MSG_ERR_LINE_NO,gcode_LastN);
             SERIAL_ERROR(json_str);
             FlushSerialRequestResend();
             serial_count = 0;
@@ -547,7 +551,7 @@ void get_command()
             strchr_pointer = strchr(cmdbuffer[bufindw], '*');
 
             if( (int)(strtod(&cmdbuffer[bufindw][strchr_pointer - cmdbuffer[bufindw] + 1], NULL)) != checksum) {
-              snprintf(json_str,JSONSIZE,"{%s:%l}",MSG_ERR_CHECKSUM_MISMATCH,gcode_LastN);
+              snprintf(json_str,JSONSIZE,"{%s:%li}",MSG_ERR_CHECKSUM_MISMATCH,gcode_LastN);
               SERIAL_ERROR(json_str);
               FlushSerialRequestResend();
               serial_count = 0;
@@ -557,7 +561,7 @@ void get_command()
           }
           else
           {
-            snprintf(json_str,JSONSIZE,"{%s:%l}",MSG_ERR_NO_CHECKSUM,gcode_LastN);
+            snprintf(json_str,JSONSIZE,"{%s:%li}",MSG_ERR_NO_CHECKSUM,gcode_LastN);
             SERIAL_ERROR(json_str);
             FlushSerialRequestResend();
             serial_count = 0;
@@ -571,7 +575,7 @@ void get_command()
         {
           if((strchr(cmdbuffer[bufindw], '*') != NULL))
           {
-            snprintf(json_str,JSONSIZE,"{%s:%l}",MSG_ERR_NO_LINENUMBER_WITH_CHECKSUM,gcode_LastN);
+            snprintf(json_str,JSONSIZE,"{%s:%li}",MSG_ERR_NO_LINENUMBER_WITH_CHECKSUM,gcode_LastN);
             SERIAL_ERROR(json_str);
             serial_count = 0;
             return;
@@ -1104,11 +1108,13 @@ void process_commands()
             run_z_probe();
             float z_at_xLeft_yBack = current_position[Z_AXIS];
 
-            snprintf(json_str,JSONSIZE,"{\"bed probe 1\":{\"x\":%f,\"y\":%f,\"z\":%f}}", \
-              current_position[X_AXIS], \
-              current_position[Y_AXIS], \
-              current_position[Z_AXIS]);
-            SERIAL_ECHO(json_str);
+            SERIAL_ECHO_START;
+            SERIAL_PROTOCOLPGM("{\"bed probe 1\":{");
+            SERIAL_ECHOPAIR("\"x\":",current_position[X_AXIS]);
+            SERIAL_ECHOPAIR(",\"y\":",current_position[Y_AXIS]);
+            SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
+            SERIAL_PROTOCOLPGM("}}");
+            SERIAL_MSG_END;
 
             // prob 2
             do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
@@ -1116,11 +1122,13 @@ void process_commands()
             run_z_probe();
             float z_at_xLeft_yFront = current_position[Z_AXIS];
 
-            snprintf(json_str,JSONSIZE,"{\"bed probe 2\":{\"x\":%f,\"y\":%f,\"z\":%f}}", \
-              current_position[X_AXIS], \
-              current_position[Y_AXIS], \
-              current_position[Z_AXIS]);
-            SERIAL_ECHO(json_str);
+            SERIAL_ECHO_START;
+            SERIAL_PROTOCOLPGM("{\"bed probe 2\":{");
+            SERIAL_ECHOPAIR("\"x\":",current_position[X_AXIS]);
+            SERIAL_ECHOPAIR(",\"y\":",current_position[Y_AXIS]);
+            SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
+            SERIAL_PROTOCOLPGM("}}");
+            SERIAL_MSG_END;
 
             // prob 3
             do_blocking_move_to(current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS] + Z_RAISE_BETWEEN_PROBINGS);
@@ -1129,11 +1137,13 @@ void process_commands()
             run_z_probe();
             float z_at_xRight_yFront = current_position[Z_AXIS];
 
-            snprintf(json_str,JSONSIZE,"{\"bed probe 3\":{\"x\":%f,\"y\":%f,\"z\":%f}}", \
-              current_position[X_AXIS], \
-              current_position[Y_AXIS], \
-              current_position[Z_AXIS]);
-            SERIAL_ECHO(json_str);
+            SERIAL_ECHO_START;
+            SERIAL_PROTOCOLPGM("{\"bed probe 3\":{");
+            SERIAL_ECHOPAIR("\"x\":",current_position[X_AXIS]);
+            SERIAL_ECHOPAIR(",\"y\":",current_position[Y_AXIS]);
+            SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
+            SERIAL_PROTOCOLPGM("}}");
+            SERIAL_MSG_END;
 
             clean_up_after_endstop_move();
 
@@ -1168,11 +1178,13 @@ void process_commands()
             feedrate = homing_feedrate[Z_AXIS];
 
             run_z_probe();
-            snprintf(json_str,JSONSIZE,"{\"bed probe\":{\"x\":%f,\"y\":%f,\"z\":%f}}", \
-              current_position[X_AXIS], \
-              current_position[Y_AXIS], \
-              current_position[Z_AXIS]);
-            SERIAL_ECHO(json_str);
+            SERIAL_ECHO_START;
+            SERIAL_PROTOCOLPGM("{\"bed probe\":{");
+            SERIAL_ECHOPAIR("\"x\":",current_position[X_AXIS]);
+            SERIAL_ECHOPAIR(",\"y\":",current_position[Y_AXIS]);
+            SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
+            SERIAL_PROTOCOLPGM("}}");
+            SERIAL_MSG_END;
 
             clean_up_after_endstop_move();
 
@@ -1423,17 +1435,20 @@ void process_commands()
 
         #ifdef SHOW_TEMP_ADC_VALUES
           #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-            snprintf(json_str,JSONSIZE,"{\"ADC\":{\"bed temp\":%.1f,\"raw temp/oversamplenr\":%.0f}}", \
-              degBed(), \
-              rawBedTemp()/OVERSAMPLENR);
-            SERIAL_ECHO(json_str);
+            SERIAL_ECHO_START;
+            SERIAL_PROTOCOLPGM("{\"ADC\":{");
+            SERIAL_ECHOPAIR("\"bed temp\":",degBed());
+            SERIAL_ECHOPAIR(",\"raw temp/oversamplenr\":",rawBedTemp()/OVERSAMPLENR);
+            SERIAL_PROTOCOLPGM("}}");
+            SERIAL_MSG_END;
           #endif
           for (int8_t cur_extruder = 0; cur_extruder < EXTRUDERS; ++cur_extruder) {
-            snprintf(json_str,JSONSIZE,"{\"ext %i temp\":%.1f,\"raw/oversamplenr\":%.0f}", \
-              cur_extruder, \
-              degHotend(cur_extruder), \
-              rawHotendTemp(cur_extruder)/OVERSAMPLENR);
-            SERIAL_ECHO(json_str);
+            SERIAL_ECHO_START;
+            SERIAL_ECHOPAIR("{\"ext ",cur_extruder+1);
+            SERIAL_ECHOPAIR(" temp\":",degHotend(cur_extruder));
+            SERIAL_ECHOPAIR(",\"raw/oversamplenr\":",rawHotendTemp(cur_extruder)/OVERSAMPLENR);
+            SERIAL_PROTOCOLPGM("}");
+            SERIAL_MSG_END;
           }
         #endif
       return;
@@ -1491,8 +1506,11 @@ void process_commands()
       #endif //TEMP_RESIDENCY_TIME
           if( (millis() - codenum) > 1000UL )
           { //Print Temp Reading and remaining time every 1 second while heating up/cooling down
-            snprintf(json_str,JSONSIZE,"{\"ext %hhu temp\":%.1f}",tmp_extruder,degHotend(tmp_extruder));
-            SERIAL_ECHO(json_str);
+            snprintf(json_str,JSONSIZE,"{\"ext %hhu temp\":",tmp_extruder+1);
+            SERIAL_ECHO_START;
+            SERIAL_ECHOPAIR("jf delete",degHotend(tmp_extruder));
+
+
             #ifdef TEMP_RESIDENCY_TIME
               if(residencyStart > -1)
               {
@@ -1546,11 +1564,12 @@ void process_commands()
           if(( millis() - codenum) > 1000 ) //Print Temp Reading every 1 second while heating up.
           {
             float tt=degHotend(active_extruder);
-            snprintf(json_str,JSONSIZE,"{\"ext %hhu temp\":%.1f,\"bed temp\":%.1f}", \
-              active_extruder, \
-              degHotend(active_extruder), \
-              degBed());
-            SERIAL_ECHO(json_str);
+            SERIAL_ECHO_START;
+            SERIAL_ECHOPAIR("{\"ext ",active_extruder+1);
+            SERIAL_ECHOPAIR(" temp\":",degHotend(active_extruder));
+            SERIAL_ECHOPAIR(",\"bed temp\":",degBed());
+            SERIAL_PROTOCOL("}");
+            SERIAL_MSG_END;
             codenum = millis();
           }
           manage_heater();
@@ -1717,15 +1736,17 @@ void process_commands()
       lcd_setstatus(strchr_pointer + 5);
       break;
     case 114: // M114
-      snprintf(json_str,JSONSIZE,"{\"pos\":{\"x\":%.2f,\"y\":%.2f,\"z\":%.2f,\"j\":%.2f,\"e\":%.2f}}", \
-        current_position[X_AXIS], \
-        current_position[Y_AXIS], \
-        current_position[Z_AXIS], \
-        current_position[J_AXIS], \
-        current_position[E_AXIS]);
-      SERIAL_ECHO(json_str);
+      SERIAL_ECHO_START;
+      SERIAL_PROTOCOLPGM("{\"pos\":{");
+      SERIAL_ECHOPAIR("\"x\":",current_position[X_AXIS]);
+      SERIAL_ECHOPAIR(",\"y\":",current_position[Y_AXIS]);
+      SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
+      SERIAL_ECHOPAIR(",\"j\":",current_position[J_AXIS]);
+      SERIAL_ECHOPAIR(",\"e\":",current_position[E_AXIS]);
+      SERIAL_PROTOCOLPGM("}}");
+      SERIAL_MSG_END;
 
-      snprintf(json_str,JSONSIZE,"{\"steps\"{\"x\":%l,\"y\":%l,\"z\":%l,\"j\":%l}}", \
+      snprintf(json_str,JSONSIZE,"{\"steps\"{\"x\":%li,\"y\":%li,\"z\":%li,\"j\":%li}}", \
         st_get_position(X_AXIS), \
         st_get_position(Y_AXIS), \
         st_get_position(Z_AXIS), \
@@ -1912,19 +1933,18 @@ void process_commands()
       }
       #endif       
       SERIAL_ECHO_START;
-      snprintf(json_str,JSONSIZE,"{%s:{\"ext 1\":{ \"x\":%.1f,\"y\":%.1f}", \
-        MSG_HOTEND_OFFSET, \
-        extruder_offset[X_AXIS][0], \
-        extruder_offset[Y_AXIS][0]);
+      snprintf(json_str,JSONSIZE,"{%s:{\"ext 1\":{",MSG_HOTEND_OFFSET);
       SERIAL_PROTOCOL(json_str);
+      SERIAL_ECHOPAIR("\"x\":",extruder_offset[X_AXIS][0]);
+      SERIAL_ECHOPAIR(",\"y\":",extruder_offset[Y_AXIS][0]);
       for(tmp_extruder = 1; tmp_extruder < EXTRUDERS; tmp_extruder++)
       {
-        snprintf(json_str,JSONSIZE,",\"ext %i\":{\"x\":%.1f,\"y\":%.1f}", \
-          extruder_offset[X_AXIS][tmp_extruder], \
-          extruder_offset[Y_AXIS][tmp_extruder]);
-         SERIAL_PROTOCOL(json_str);
+        snprintf(json_str,JSONSIZE,"},\"ext %i\":{",tmp_extruder+1);
+        SERIAL_PROTOCOL(json_str);
+        SERIAL_ECHOPAIR("\"x\":",extruder_offset[X_AXIS][tmp_extruder]);
+        SERIAL_ECHOPAIR(",\"y\":",extruder_offset[Y_AXIS][tmp_extruder]);
       }
-      SERIAL_PROTOCOL("}}");
+      SERIAL_PROTOCOL("}}}");
       SERIAL_MSG_END;
     }
     break;
@@ -2298,13 +2318,17 @@ void process_commands()
           if (code_seen('R'))
             duplicate_extruder_temp_offset = code_value();
 
-          snprintf(json_str,JSONSIZE,"{%s:{\"ext 1\":{ \"x\":%.1f,\"y\":%.1f},\"ext 2\":{ \"x\":%.1f,\"y\":%.1f}}", \
-            MSG_HOTEND_OFFSET, \
-            extruder_offset[X_AXIS][0], \
-            extruder_offset[Y_AXIS][0], \
-            duplicate_extruder_x_offset, \
-            extruder_offset[Y_AXIS][1]);
-          SERIAL_ECHO(json_str);
+          snprintf(json_str,JSONSIZE,"{%s:{\"ext 1\":{",MSG_HOTEND_OFFSET);
+          SERIAL_ECHO_START;
+          SERIAL_PROTOCOL(json_str);
+          SERIAL_ECHOPAIR("\"x\":",extruder_offset[X_AXIS][0]);
+          SERIAL_ECHOPAIR(",\"y\":",extruder_offset[Y_AXIS][0]);
+          SERIAL_PROTOCOLPGM("},\"ext 2\":{");
+          SERIAL_ECHOPAIR("\"x\":",duplicate_extruder_x_offset);
+          SERIAL_ECHOPAIR(",\"y\":",extruder_offset[Y_AXIS][1]);
+          SERIAL_PROTOCOLPGM("}}}");
+          SERIAL_MSG_END;
+
         }
         else if (dual_x_carriage_mode != DXC_FULL_CONTROL_MODE && dual_x_carriage_mode != DXC_AUTO_PARK_MODE)
         {
@@ -2828,26 +2852,24 @@ void send_printer_state()
   // {"state":{"t":{"ext1":#,"ext2":#,"bed":#},"pos":{"X":#,"Y":#,"Z":#,"J":#},
   //  "E0_remaining":#,"E1_remaining":#}}
     SERIAL_ECHO_START;
-    snprintf(json_str,JSONSIZE,"{\"state\":{\"t\":{\"ext 1 temp\":%.1f",degHotend(0));
-    SERIAL_PROTOCOL(json_str);
+    SERIAL_PROTOCOLPGM("{\"state\":{\"t\":{");
+    SERIAL_ECHOPAIR("\"ext 1 temp\":",degHotend(0));
     #if EXTRUDERS > 1
-      snprintf(json_str,JSONSIZE,",\"ext 2 temp\":%.1f",degHotend(1));
-      SERIAL_PROTOCOL(json_str);
+      SERIAL_ECHOPAIR(",\"ext 2 temp\":",degHotend(1));
       #if EXTRUDERS > 2
-        snprintf(json_str,",\"ext 3 temp\":%.1f",degHotend(2));
-        SERIAL_PROTOCOL(json_str);
+        SERIAL_ECHOPAIR(",\"ext 3 temp\":",degHotend(2));
       #endif
     #endif
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-      snprintf(json_str,JSONSIZE,",bed\":%.1f}",degBed());
-      SERIAL_PROTOCOL(json_str);
+      SERIAL_ECHOPAIR(",bed\":",degBed());
     #endif
-    snprintf(json_str,JSONSIZE,"},pos\":{\"X\":%.2f,\"Y\":%.2f,\"Z\":%.2f,\"J\":%.2f}}", \
-      current_position[X_AXIS], \
-      current_position[Y_AXIS], \
-      current_position[Z_AXIS], \
-      current_position[J_AXIS]);
-    SERIAL_PROTOCOL(json_str);
+    SERIAL_PROTOCOLPGM("},pos\":{");
+    SERIAL_ECHOPAIR("\"x\":",current_position[X_AXIS]);
+    SERIAL_ECHOPAIR(",\"y\":",current_position[Y_AXIS]);
+    SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
+    SERIAL_ECHOPAIR(",\"j\":",current_position[J_AXIS]);
+    SERIAL_ECHOPAIR(",\"e\":",current_position[E_AXIS]);
+    SERIAL_PROTOCOLPGM("}}");
     SERIAL_MSG_END;
     previous_millis_state = millis();
   }
