@@ -487,15 +487,15 @@ void manage_heater()
     }
     #endif
     #ifdef TEMP_SENSOR_1_AS_REDUNDANT
-      if(fabs(current_temperature[0] - redundant_temperature) > MAX_REDUNDANT_TEMP_SENSOR_DIFF) {
-        disable_heater();
-        if(IsStopped() == false) {
-          SERIAL_ERRORPGM("\"Extruder switched off. Temperature difference between temp sensors is too high.\"");
-          LCD_ALERTMESSAGEPGM("Err: REDUNDANT TEMP ERROR");
-        }
-        #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
+      #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
+        if(fabs(current_temperature[0] - redundant_temperature) > MAX_REDUNDANT_TEMP_SENSOR_DIFF) {
+          disable_heater();
+          if(IsStopped() == false) {
+            SERIAL_ERRORPGM("\"Extruder switched off. Temperature difference between temp sensors is too high.\"");
+            LCD_ALERTMESSAGEPGM("Err: REDUNDANT TEMP ERROR");
+          }
           Stop();
-        #endif
+      #endif
       }
     #endif
   } // End extruder for loop
@@ -926,37 +926,37 @@ void disable_heater()
 }
 
 void max_temp_error(uint8_t e) {
-  disable_heater();
-  if(IsStopped() == false) {
-    SERIAL_ERRORPGM("\"MAXTEMP triggered. Extruder switched off\"");
-    LCD_ALERTMESSAGEPGM("Err: MAXTEMP");
-  }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
-  Stop();
+    disable_heater();
+    if(IsStopped() == false) {
+      SERIAL_ERRORPGM("\"MAXTEMP triggered. Extruder switched off\"");
+      LCD_ALERTMESSAGEPGM("Err: MAXTEMP");
+    }
+    Stop();
   #endif
 }
 
 void min_temp_error(uint8_t e) {
-  disable_heater();
-  if(IsStopped() == false) {
-    SERIAL_ERRORPGM("\"MINTEMP triggered. Extruder switched off\"");
-    LCD_ALERTMESSAGEPGM("Err: MINTEMP");
-  }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
-  Stop();
+    disable_heater();
+    if(IsStopped() == false) {
+      SERIAL_ERRORPGM("\"MINTEMP triggered. Extruder switched off\"");
+      LCD_ALERTMESSAGEPGM("Err: MINTEMP");
+    }
+    Stop();
   #endif
 }
 
 void bed_max_temp_error(void) {
-#if HEATER_BED_PIN > -1
-  WRITE(HEATER_BED_PIN, 0);
-#endif
-  if(IsStopped() == false) {
-    SERIAL_ERRORPGM("\"MAXTEMP BED triggered. Extruder switched off\"");
-    LCD_ALERTMESSAGEPGM("Err: MAXTEMP BED");
-  }
   #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
-  Stop();
+    #if HEATER_BED_PIN > -1
+      WRITE(HEATER_BED_PIN, 0);
+    #endif
+    if(IsStopped() == false) {
+      SERIAL_ERRORPGM("\"MAXTEMP BED triggered. Extruder switched off\"");
+      LCD_ALERTMESSAGEPGM("Err: MAXTEMP BED");
+    }
+    Stop();
   #endif
 }
 
