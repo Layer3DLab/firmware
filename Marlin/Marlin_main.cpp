@@ -1506,9 +1506,11 @@ void process_commands()
       #endif //TEMP_RESIDENCY_TIME
           if( (millis() - codenum) > 1000UL )
           { //Print Temp Reading and remaining time every 1 second while heating up/cooling down
-            snprintf(json_str,JSONSIZE,"{\"ext %hhu temp\":",tmp_extruder+1);
             SERIAL_ECHO_START;
-            SERIAL_ECHOPAIR("jf delete",degHotend(tmp_extruder));
+            SERIAL_ECHOPAIR("{\"ext ",tmp_extruder+1);
+            SERIAL_ECHOPAIR(" temp\":",degHotend(tmp_extruder));
+            SERIAL_PROTOCOL("}");
+            SERIAL_MSG_END;
 
 
             #ifdef TEMP_RESIDENCY_TIME
