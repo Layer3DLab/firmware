@@ -12,6 +12,7 @@
 #define E1_MS1_PIN -1
 #define E1_MS2_PIN -1
 #define DIGIPOTSS_PIN -1
+#define BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
 
 #if MOTHERBOARD == 99
 #define KNOWN_BOARD 1
@@ -120,7 +121,7 @@
 
 //All these generations of Gen7 supply thermistor power
 //via PS_ON, so ignore bad thermistor readings
-#define BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
+//#define BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
 
 //our pin for debugging.
 #define DEBUG_PIN 0
