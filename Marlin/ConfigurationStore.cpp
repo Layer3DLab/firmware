@@ -143,8 +143,8 @@ void Config_PrintSettings()
 
     SERIAL_ECHO_START;
     SERIAL_ECHOPAIR("{\"min feedrate (mm/s)\":",minimumfeedrate);
-    SERIAL_ECHOPAIR("\"min travel feedrate (mm/s)\":",mintravelfeedrate);
-    SERIAL_ECHOPAIR("\"min segment time (ms)\":",minsegmenttime);
+    SERIAL_ECHOPAIR(",\"min travel feedrate (mm/s)\":",mintravelfeedrate);
+    SERIAL_ECHOPAIR(",\"min segment time (ms)\":",minsegmenttime);
     SERIAL_PROTOCOLPGM("}");
     SERIAL_MSG_END;
 
