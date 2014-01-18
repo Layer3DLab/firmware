@@ -1000,7 +1000,7 @@ void process_commands()
 #ifdef ENABLE_AUTO_BED_LEVELING
   float x_tmp, y_tmp, z_tmp, real_z;
 #endif
-    _delay_ms(1000)
+    _delay_ms(1000);
     ClearToSend();
     return;
   if(code_seen('G'))
