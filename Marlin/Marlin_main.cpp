@@ -2867,9 +2867,9 @@ void send_printer_state()
       #endif
     #endif
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-      SERIAL_ECHOPAIR(",bed\":",degBed());
+      SERIAL_ECHOPAIR(",\"bed\":",degBed());
     #endif
-    SERIAL_PROTOCOLPGM("},pos\":{");
+    SERIAL_PROTOCOLPGM("},\"pos\":{");
     SERIAL_ECHOPAIR("\"x\":",current_position[X_AXIS]);
     SERIAL_ECHOPAIR(",\"y\":",current_position[Y_AXIS]);
     SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
