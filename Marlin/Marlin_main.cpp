@@ -1002,7 +1002,7 @@ void process_commands()
   float x_tmp, y_tmp, z_tmp, real_z;
 #endif
     _delay_ms(1000);
-    ClearToSend();
+//    ClearToSend();
     return;
   if(code_seen('G'))
   {
