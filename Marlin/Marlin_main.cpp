@@ -420,6 +420,7 @@ void setup()
   setup_killpin();
   setup_powerhold();
   MYSERIAL.begin(BAUDRATE);
+  SERIAL_ECHO_START;
   SERIAL_PROTOCOLPGM("{\"start\":{\"reset status\":");
 
   // Check startup - does nothing if bootloader sets MCUSR to 0
@@ -436,7 +437,7 @@ void setup()
     MSG_FREE_MEMORY,freeMemory(),
     MSG_PLANNER_BUFFER_BYTES,(int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
   SERIAL_PROTOCOL(json_str);
-  SERIAL_PROTOCOLLNPGM("");
+  SERIAL_MSG_END
   for(int8_t i = 0; i < CMDBUFSIZE; i++)
   {
     fromsd[i] = false;
@@ -2871,7 +2872,7 @@ void send_printer_state()
     SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
     SERIAL_ECHOPAIR(",\"j\":",current_position[J_AXIS]);
     SERIAL_ECHOPAIR(",\"e\":",current_position[E_AXIS]);
-    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_PROTOCOLPGM("}}}");
     SERIAL_MSG_END;
     previous_millis_state = millis();
   }
