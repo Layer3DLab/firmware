@@ -104,7 +104,6 @@ void Config_StoreSettings()
 #ifndef DISABLE_M503
 void Config_PrintSettings()
 {  // Always have this function, even with EEPROM_SETTINGS disabled, the current values will be shown
-    SERIAL_ECHO(json_str);
     SERIAL_ECHO_START;
     SERIAL_PROTOCOLPGM("{\"steps/unit\":{");
     SERIAL_ECHOPAIR("\"x\":",axis_steps_per_unit[X_AXIS]);
@@ -143,8 +142,8 @@ void Config_PrintSettings()
 
     SERIAL_ECHO_START;
     SERIAL_ECHOPAIR("{\"min feedrate (mm/s)\":",minimumfeedrate);
-    SERIAL_ECHOPAIR("\"min travel feedrate (mm/s)\":",mintravelfeedrate);
-    SERIAL_ECHOPAIR("\"min segment time (ms)\":",minsegmenttime);
+    SERIAL_ECHOPAIR(",\"min travel feedrate (mm/s)\":",mintravelfeedrate);
+    SERIAL_ECHOPAIR(",\"min segment time (ms)\":",minsegmenttime);
     SERIAL_PROTOCOLPGM("}");
     SERIAL_MSG_END;
 

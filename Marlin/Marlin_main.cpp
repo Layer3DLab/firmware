@@ -420,6 +420,7 @@ void setup()
   setup_killpin();
   setup_powerhold();
   MYSERIAL.begin(BAUDRATE);
+  SERIAL_ECHO_START;
   SERIAL_PROTOCOLPGM("{\"start\":{\"reset status\":");
 
   // Check startup - does nothing if bootloader sets MCUSR to 0
@@ -436,7 +437,7 @@ void setup()
     MSG_FREE_MEMORY,freeMemory(),
     MSG_PLANNER_BUFFER_BYTES,(int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
   SERIAL_PROTOCOL(json_str);
-  SERIAL_PROTOCOLLNPGM("");
+  SERIAL_MSG_END;
   for(int8_t i = 0; i < CMDBUFSIZE; i++)
   {
     fromsd[i] = false;
@@ -1506,9 +1507,11 @@ void process_commands()
       #endif //TEMP_RESIDENCY_TIME
           if( (millis() - codenum) > 1000UL )
           { //Print Temp Reading and remaining time every 1 second while heating up/cooling down
-            snprintf(json_str,JSONSIZE,"{\"ext %hhu temp\":",tmp_extruder+1);
             SERIAL_ECHO_START;
-            SERIAL_ECHOPAIR("jf delete",degHotend(tmp_extruder));
+            SERIAL_ECHOPAIR("{\"ext ",tmp_extruder+1);
+            SERIAL_ECHOPAIR(" temp\":",degHotend(tmp_extruder));
+            SERIAL_PROTOCOL("}");
+            SERIAL_MSG_END;
 
 
             #ifdef TEMP_RESIDENCY_TIME
@@ -2861,15 +2864,15 @@ void send_printer_state()
       #endif
     #endif
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
-      SERIAL_ECHOPAIR(",bed\":",degBed());
+      SERIAL_ECHOPAIR(",\"bed\":",degBed());
     #endif
-    SERIAL_PROTOCOLPGM("},pos\":{");
+    SERIAL_PROTOCOLPGM("},\"pos\":{");
     SERIAL_ECHOPAIR("\"x\":",current_position[X_AXIS]);
     SERIAL_ECHOPAIR(",\"y\":",current_position[Y_AXIS]);
     SERIAL_ECHOPAIR(",\"z\":",current_position[Z_AXIS]);
     SERIAL_ECHOPAIR(",\"j\":",current_position[J_AXIS]);
     SERIAL_ECHOPAIR(",\"e\":",current_position[E_AXIS]);
-    SERIAL_PROTOCOLPGM("}}");
+    SERIAL_PROTOCOLPGM("}}}");
     SERIAL_MSG_END;
     previous_millis_state = millis();
   }

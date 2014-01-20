@@ -184,11 +184,11 @@ void PID_autotune(float temp, int extruder, int ncycles)
        ||(extruder < 0)
   #endif
        ){
-          SERIAL_ERROR("\"PID autotune failed. Bad extruder number.\"");
+          SERIAL_ERRORPGM("\"PID autotune failed. Bad extruder number.\"");
           return;
         }
 	
-  SERIAL_ECHO("\"PID autotune start\"");
+  SERIAL_ECHOPGM("\"PID autotune start\"");
   
   disable_heater(); // switch off all heaters.
 
@@ -480,8 +480,7 @@ void manage_heater()
         {
             setTargetHotend(0, e);
             LCD_MESSAGEPGM("Heating failed");
-            SERIAL_ECHO_START;
-            SERIAL_ECHOLN("Heating failed");
+            SERIAL_ERRORPGM("\"Heating failed\"");
         }else{
             watchmillis[e] = 0;
         }
@@ -491,8 +490,7 @@ void manage_heater()
       if(fabs(current_temperature[0] - redundant_temperature) > MAX_REDUNDANT_TEMP_SENSOR_DIFF) {
         disable_heater();
         if(IsStopped() == false) {
-          SERIAL_ERROR_START;
-          SERIAL_ERRORLNPGM("Extruder switched off. Temperature difference between temp sensors is too high !");
+          SERIAL_ERRORPGM("\"Extruder switched off. Temperature difference between temp sensors is too high.\"");
           LCD_ALERTMESSAGEPGM("Err: REDUNDANT TEMP ERROR");
         }
         #ifndef BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
@@ -1160,8 +1158,7 @@ ISR(TIMER0_COMPB_vect)
       temp_count++;
       break;
 //    default:
-//      SERIAL_ERROR_START;
-//      SERIAL_ERRORLNPGM("Temp measurement error!");
+//      SERIAL_ERRORPGM("\"Temp measurement error!\"");
 //      break;
   }
     
