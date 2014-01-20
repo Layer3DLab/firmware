@@ -437,7 +437,7 @@ void setup()
     MSG_FREE_MEMORY,freeMemory(),
     MSG_PLANNER_BUFFER_BYTES,(int)sizeof(block_t)*BLOCK_BUFFER_SIZE);
   SERIAL_PROTOCOL(json_str);
-  SERIAL_MSG_END
+  SERIAL_MSG_END;
   for(int8_t i = 0; i < CMDBUFSIZE; i++)
   {
     fromsd[i] = false;
