@@ -1001,9 +1001,7 @@ void process_commands()
 #ifdef ENABLE_AUTO_BED_LEVELING
   float x_tmp, y_tmp, z_tmp, real_z;
 #endif
-    _delay_ms(1000);
-//    ClearToSend();
-    return;
+    _delay_ms(10);
   if(code_seen('G'))
   {
     return;
@@ -1224,6 +1222,8 @@ void process_commands()
 
   else if(code_seen('M'))
   {
+    ClearToSend();
+    return;
     switch( (int)code_value() )
     {
 #ifdef ULTIPANEL
@@ -2407,6 +2407,8 @@ void process_commands()
 
   else if(code_seen('T'))
   {
+    ClearToSend();
+    return;
     tmp_extruder = code_value();
     if(tmp_extruder >= EXTRUDERS) {
       SERIAL_ERROR(MSG_INVALID_EXTRUDER);
