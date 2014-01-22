@@ -5,3 +5,4 @@ applet/
 *.rej
 *.bak
 *.DS_Store
+*build-mega2560*
