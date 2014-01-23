@@ -18,10 +18,10 @@ else
 endif
 
 # Automatically add git branch tag and hash to compiled firmware
-GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-GIT_TAG_TMP := $(shell git describe --tags --always --match "v[0-9].[0-9]*") #  print out tag or hash if there is no tag
-GIT_HASH := $(shell git rev-parse --short=7 HEAD)
+#GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+#GIT_TAG_TMP := $(shell git describe --tags --always --match "v[0-9].[0-9]*") #  print out tag or hash if there is no tag
+#GIT_HASH := $(shell git rev-parse --short=7 HEAD)
 
-GIT_TAG := $(strip $(GIT_TAG_TMP))
+#GIT_TAG := $(strip $(GIT_TAG_TMP))
 
-CPPFLAGS += -DGIT_BRANCH=\"$(GIT_BRANCH)\" -DGIT_TAG=\"$(GIT_TAG)\" -DGIT_HASH=\"$(GIT_HASH)\"
+#CPPFLAGS += -DGIT_BRANCH=\"$(GIT_BRANCH)\" -DGIT_TAG=\"$(GIT_TAG)\" -DGIT_HASH=\"$(GIT_HASH)\"
