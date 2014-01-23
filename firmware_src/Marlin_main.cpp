@@ -1527,7 +1527,7 @@ void process_commands()
               }
               else
               {
-                 SERIAL_ECHOPGM("{\"echo\":{\"time remaining\":\"?\"}}");
+                 SERIAL_ECHOPGM("{\"time remaining\":\"?\"}");
               }
             #endif
             codenum = millis();
