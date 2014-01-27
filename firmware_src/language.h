@@ -40,7 +40,7 @@
 #endif
 
 #ifndef GIT_BRANCH
-  #define GIT_TAG "v0.10-7-g375f98a"
+  #define GIT_TAG "v0.10"
   #define GIT_BRANCH "develop"
   #define GIT_HASH "e59ee0f"
 #endif
