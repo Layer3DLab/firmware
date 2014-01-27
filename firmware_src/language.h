@@ -40,9 +40,9 @@
 #endif
 
 #ifndef GIT_BRANCH
-  #define GIT_BRANCH "UNKNOWN"
-  #define GIT_TAG "UNKNOWN"
-  #define GIT_HASH "UNKNOWN"
+  #define GIT_TAG "v0.10-7-g375f98a"
+  #define GIT_BRANCH "develop"
+  #define GIT_HASH "e59ee0f"
 #endif
 
 #define STRINGIFY_(n) #n

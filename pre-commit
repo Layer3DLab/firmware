@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# To use this hook create a symlink to this file in the .git/hooks/ directory
+
+REPO_DIR="$(PWD)"
+filepath="$REPO_DIR/firmware_src/language.h"
+
+# Check if there is anything to be committed otherwise abort
+if [ -n "$(git status --untracked-files=no --porcelain)" ]; then
+    if [ -f "$filepath" ]; then
+        GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        GIT_HASH=$(git rev-parse --short=7 HEAD)
+
+        sed -i "" "s/#define GIT_BRANCH \".*/#define GIT_BRANCH \"$GIT_BRANCH\"/g" "$filepath"
+        sed -i "" "s/#define GIT_HASH \".*/#define GIT_HASH \"$GIT_HASH\"/g" "$filepath"
+
+        git add "$filepath"
+        exit 0
+    else
+        echo "$filepath does not exist"
+        exit 1
+    fi
+else
+    echo "No, changes to be committed"
+    exit 1
+fi
+
