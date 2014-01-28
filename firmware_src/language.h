@@ -42,7 +42,7 @@
 #ifndef GIT_BRANCH
   #define GIT_TAG "v0.10"
   #define GIT_BRANCH "fake_printer"
-  #define GIT_HASH "64bb58f"
+  #define GIT_PREV_HASH "64bb58f"
 #endif
 
 #define STRINGIFY_(n) #n

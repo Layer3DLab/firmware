@@ -5,6 +5,8 @@
 REPO_DIR="$(PWD)"
 filepath="$REPO_DIR/firmware_src/language.h"
 
+# TODO: fix merge conflict problem
+
 # Check if there is anything to be committed otherwise abort
 if [ -n "$(git status --untracked-files=no --porcelain)" ]; then
     if [ -f "$filepath" ]; then
