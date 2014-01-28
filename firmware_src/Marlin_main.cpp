@@ -1568,10 +1568,11 @@ void process_commands()
           {
             float tt=degHotend(active_extruder);
             SERIAL_ECHO_START;
-            SERIAL_ECHOPAIR("{\"ext ",active_extruder+1);
-            SERIAL_ECHOPAIR(" temp\":",degHotend(active_extruder));
-            SERIAL_ECHOPAIR(",\"bed temp\":",degBed());
-            SERIAL_PROTOCOL("}");
+            SERIAL_PROTOCOLPGM("{\"temp\":{");
+            SERIAL_ECHOPAIR("\"ext ",active_extruder+1);
+            SERIAL_ECHOPAIR("\":",degHotend(active_extruder));
+            SERIAL_ECHOPAIR(",\"bed\":",degBed());
+            SERIAL_PROTOCOL("}}");
             SERIAL_MSG_END;
             codenum = millis();
           }
