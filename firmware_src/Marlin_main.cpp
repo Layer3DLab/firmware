@@ -1908,7 +1908,7 @@ void process_commands()
           case 0: autoretract_enabled=false;retracted=false;break;
           case 1: autoretract_enabled=true;retracted=false;break;
           default:
-            snprintf(json_str,JSONSIZE,"{%s:%s}",MSG_UNKNOWN_COMMAND,cmdbuffer[bufindr]);
+            snprintf(json_str,JSONSIZE,"{%s:\"%s\"}",MSG_UNKNOWN_COMMAND,cmdbuffer[bufindr]);
             SERIAL_ECHO(json_str);
         }
       }
@@ -2855,12 +2855,12 @@ void send_printer_state()
   // {"state":{"t":{"ext1":#,"ext2":#,"bed":#},"pos":{"X":#,"Y":#,"Z":#,"J":#},
   //  "E0_remaining":#,"E1_remaining":#}}
     SERIAL_ECHO_START;
-    SERIAL_PROTOCOLPGM("{\"state\":{\"t\":{");
-    SERIAL_ECHOPAIR("\"ext 1 temp\":",degHotend(0));
+    SERIAL_PROTOCOLPGM("{\"state\":{\"temp\":{");
+    SERIAL_ECHOPAIR("\"ext 1\":",degHotend(0));
     #if EXTRUDERS > 1
-      SERIAL_ECHOPAIR(",\"ext 2 temp\":",degHotend(1));
+      SERIAL_ECHOPAIR(",\"ext 2\":",degHotend(1));
       #if EXTRUDERS > 2
-        SERIAL_ECHOPAIR(",\"ext 3 temp\":",degHotend(2));
+        SERIAL_ECHOPAIR(",\"ext 3\":",degHotend(2));
       #endif
     #endif
     #if defined(TEMP_BED_PIN) && TEMP_BED_PIN > -1
