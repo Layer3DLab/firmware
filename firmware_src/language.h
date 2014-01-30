@@ -40,9 +40,9 @@
 #endif
 
 #ifndef GIT_BRANCH
-  #define GIT_TAG "None"
-  #define GIT_BRANCH "develop"
-  #define GIT_PREV_HASH "1b0c4c2"
+  #define GIT_TAG "v0.12"
+  #define GIT_BRANCH "master"
+  #define GIT_PREV_HASH "70b72fd"
 #endif
 
 #define STRINGIFY_(n) #n
