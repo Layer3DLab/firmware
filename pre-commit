@@ -11,8 +11,8 @@ if [ -n "$(git status --untracked-files=no --porcelain)" ]; then
         GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
         GIT_PREV_HASH=$(git rev-parse --short=7 HEAD)
 
-        sed -i "" "s/#define GIT_BRANCH \"[^\"]\"/#define GIT_BRANCH \"$GIT_BRANCH\"/g" "$filepath"
-        sed -i "" "s/#define GIT_PREV_HASH \"[^\"]\"/#define GIT_PREV_HASH \"$GIT_PREV_HASH\"/g" "$filepath"
+        sed -i "" "s/#define GIT_BRANCH \".*/#define GIT_BRANCH \"$GIT_BRANCH\"/g" "$filepath"
+        sed -i "" "s/#define GIT_PREV_HASH \".*/#define GIT_PREV_HASH \"$GIT_PREV_HASH\"/g" "$filepath"
 
         git add "$filepath"
         exit 0
