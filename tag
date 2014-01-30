@@ -12,7 +12,7 @@ REPO_DIR="$(PWD)"
 filepath="$REPO_DIR/firmware_src/language.h"
 
 if [ -f "$filepath" ]; then
-    sed -i "" "s/#define GIT_TAG \"[^\"]\"/#define GIT_TAG \"$1\"/g" "$filepath"
+    sed -i "" "s/#define GIT_TAG \".*/#define GIT_TAG \"$1\"/g" "$filepath"
     git commit -am "Bumped version number to $1"
     git tag "$1"
     exit 0
