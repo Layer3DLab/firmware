@@ -40,9 +40,15 @@
 #endif
 
 #ifndef GIT_BRANCH
-  #define GIT_TAG "v0.12.1"
+<<<<<<< HEAD
+  #define GIT_TAG "v0.12.2"
   #define GIT_BRANCH "master"
-  #define GIT_PREV_HASH "5c3bd4c"
+  #define GIT_PREV_HASH "05e32ca"
+=======
+  #define GIT_TAG "v0.12.2"
+  #define GIT_BRANCH "master"
+  #define GIT_PREV_HASH "05e32ca"
+>>>>>>> hotfix
 #endif
 
 #define STRINGIFY_(n) #n
