@@ -387,10 +387,10 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 // default settings
 // delta speeds must be the same on xyz
-// extruder steps/mm of filament = 200 step/rev_m * 2 mstep/step * (13+212/289) rev_m/rev_p * (1/(pi*13.589)) rev_p/mm_b * (20.7112/20) mm_b/mm_f = 133.25 mstep/mm_f
-// This assumes the inside of the belt touches the outside of the pulley. If the inside of the belt touches the pulley then you get 138.92.switch
-// A weighted average approximation of the two yields 135
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {64, 64, 64, 2*94.49, 135}  // Default steps per unit for Kossel (GT2, 20 tooth)
+// extruder steps/mm of filament = 200 step/rev_m * 2 mstep/step * (13+212/289) rev_m/rev_p * (1/(pi*13.589)) rev_p/mm_b * (21.5912/20) mm_b/mm_f = 138.9161 mstep/mm_f
+// This assumes the inside of the belt touches the outside of the filament. If the inside of the belt touches the pulley then you get 133.2543
+// Tested first with 135 but found that it was extruding about 3% short of what it should. Calculated the error between 135 and 138.9161 and it is about 2.8%
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {64, 64, 64, 2*94.49, 138.92}
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 500, 500, 25}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1000,1000,1000,1000,9000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
