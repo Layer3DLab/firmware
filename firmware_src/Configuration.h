@@ -260,7 +260,7 @@
 
 //this prevents dangerous Extruder moves, i.e. if the temperature is under the limit
 //can be software-disabled for whatever purposes by
-//#define PREVENT_DANGEROUS_EXTRUDE
+#define PREVENT_DANGEROUS_EXTRUDE
 //if PREVENT_DANGEROUS_EXTRUDE is on, you can still disable (uncomment) very long bits of extrusion separately.
 //#define PREVENT_LENGTHY_EXTRUDE
 
@@ -390,7 +390,7 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // extruder steps/mm of filament = 200 step/rev_m * 2 mstep/step * (13+212/289) rev_m/rev_p * (1/(pi*13.589)) rev_p/mm_b * (20.7112/20) mm_b/mm_f = 133.25 mstep/mm_f
 // This assumes the inside of the belt touches the outside of the pulley. If the inside of the belt touches the pulley then you get 138.92.switch
 // A weighted average approximation of the two yields 135
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {64, 64, 64, 2*94.49, 135}  // 77 was old. Default steps per unit for Kossel (GT2, 20 tooth)
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {64, 64, 64, 2*94.49, 135}  // Default steps per unit for Kossel (GT2, 20 tooth)
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 500, 500, 25}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1000,1000,1000,1000,9000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
