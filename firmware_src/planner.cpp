@@ -666,9 +666,18 @@ void plan_buffer_line(const float &x, const float &y, const float &z, const floa
   // Enable all
   if(block->steps_e != 0)
   {
-    enable_e0();
-    enable_e1();
-    enable_e2(); 
+    switch(extruder)
+    {
+      case 0:
+        enable_e0();
+        break;
+       case 1:
+        enable_e1();
+        break;
+      case 2:
+        enable_e2();
+        break;
+    }
   }
 
   if (block->steps_e == 0)
