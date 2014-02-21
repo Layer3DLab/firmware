@@ -357,10 +357,10 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 // Travel limits after homing
 // SKYFORGE limits
-#define X_MAX_POS 95
+#define X_MAX_POS 75
 #define X_MIN_POS -100
 #define Y_MAX_POS 120
-#define Y_MIN_POS -95
+#define Y_MIN_POS -120
 #define Z_MAX_POS MANUAL_Z_HOME_POS
 #define Z_MIN_POS 0
 #define J_MAX_POS 390
