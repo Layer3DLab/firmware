@@ -192,13 +192,18 @@
 // If you are using a preconfigured hotend then you can use one of the value sets by uncommenting it
 // Ultimaker
 //    #define  DEFAULT_Kp 22.2
- //   #define  DEFAULT_Ki 1.08
+//    #define  DEFAULT_Ki 1.08
 //    #define  DEFAULT_Kd 114
 	
 // TRITIUM MARK II
-     #define DEFAULT_Kp 25.2
-     #define DEFAULT_Ki 3.1
-     #define DEFAULT_Kd 52.1
+//     #define DEFAULT_Kp 25.2
+//     #define DEFAULT_Ki 3.1
+//     #define DEFAULT_Kd 52.1
+
+// SKYFORGE
+     #define DEFAULT_Kp 30.79
+     #define DEFAULT_Ki 4.12
+     #define DEFAULT_Kd 57.51
 
 // Makergear
 //    #define  DEFAULT_Kp 7.0
@@ -229,7 +234,7 @@
 // all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
 // setting this to anything other than 255 enables a form of PWM to the bed just like HEATER_BED_DUTY_CYCLE_DIVIDER did,
 // so you shouldn't use it unless you are OK with PWM on your bed.  (see the comment on enabling PIDTEMPBED)
-#define MAX_BED_POWER 75 // limits duty cycle to bed; 255=full current
+#define MAX_BED_POWER 100 // limits duty cycle to bed; 255=full current
 
 #ifdef PIDTEMPBED
 // TRITIUM MARK II 1/8" Glass with aluminum heater, acrylic spacers below melamine
