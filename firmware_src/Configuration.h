@@ -192,13 +192,18 @@
 // If you are using a preconfigured hotend then you can use one of the value sets by uncommenting it
 // Ultimaker
 //    #define  DEFAULT_Kp 22.2
- //   #define  DEFAULT_Ki 1.08
+//    #define  DEFAULT_Ki 1.08
 //    #define  DEFAULT_Kd 114
 	
 // TRITIUM MARK II
-     #define DEFAULT_Kp 25.2
-     #define DEFAULT_Ki 3.1
-     #define DEFAULT_Kd 52.1
+//     #define DEFAULT_Kp 25.2
+//     #define DEFAULT_Ki 3.1
+//     #define DEFAULT_Kd 52.1
+
+// SKYFORGE
+     #define DEFAULT_Kp 30.79
+     #define DEFAULT_Ki 4.12
+     #define DEFAULT_Kd 57.51
 
 // Makergear
 //    #define  DEFAULT_Kp 7.0
@@ -229,7 +234,7 @@
 // all forms of bed control obey this (PID, bang-bang, bang-bang with hysteresis)
 // setting this to anything other than 255 enables a form of PWM to the bed just like HEATER_BED_DUTY_CYCLE_DIVIDER did,
 // so you shouldn't use it unless you are OK with PWM on your bed.  (see the comment on enabling PIDTEMPBED)
-#define MAX_BED_POWER 75 // limits duty cycle to bed; 255=full current
+#define MAX_BED_POWER 100 // limits duty cycle to bed; 255=full current
 
 #ifdef PIDTEMPBED
 // TRITIUM MARK II 1/8" Glass with aluminum heater, acrylic spacers below melamine
@@ -260,7 +265,7 @@
 
 //this prevents dangerous Extruder moves, i.e. if the temperature is under the limit
 //can be software-disabled for whatever purposes by
-//#define PREVENT_DANGEROUS_EXTRUDE
+#define PREVENT_DANGEROUS_EXTRUDE
 //if PREVENT_DANGEROUS_EXTRUDE is on, you can still disable (uncomment) very long bits of extrusion separately.
 //#define PREVENT_LENGTHY_EXTRUDE
 
@@ -352,10 +357,10 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 // Travel limits after homing
 // SKYFORGE limits
-#define X_MAX_POS 95
+#define X_MAX_POS 75
 #define X_MIN_POS -100
 #define Y_MAX_POS 120
-#define Y_MIN_POS -95
+#define Y_MIN_POS -120
 #define Z_MAX_POS MANUAL_Z_HOME_POS
 #define Z_MIN_POS 0
 #define J_MAX_POS 390
@@ -376,7 +381,7 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 // For deltabots this means top and center of the cartesian print volume.
 #define MANUAL_X_HOME_POS 0
 #define MANUAL_Y_HOME_POS 0
-#define MANUAL_Z_HOME_POS 268.2 // For delta: Distance between nozzle and print surface after homing.
+#define MANUAL_Z_HOME_POS 268.5 // For delta: Distance between nozzle and print surface after homing.
 #define MANUAL_J_HOME_POS 0
 
 //// MOVEMENT SETTINGS
@@ -387,7 +392,10 @@ const bool J_MAX_ENDSTOP_INVERTING = false; // set to true to invert the logic o
 
 // default settings
 // delta speeds must be the same on xyz
-#define DEFAULT_AXIS_STEPS_PER_UNIT   {64, 64, 64, 2*94.49, 77}  // default steps per unit for Kossel (GT2, 20 tooth)
+// extruder steps/mm of filament = 200 step/rev_m * 2 mstep/step * (13+212/289) rev_m/rev_p * (1/(pi*13.589)) rev_p/mm_b * (21.5912/20) mm_b/mm_f = 138.9161 mstep/mm_f
+// This assumes the inside of the belt touches the outside of the filament. If the inside of the belt touches the pulley then you get 133.2543
+// Tested first with 135 but found that it was extruding about 3% short of what it should. Calculated the error between 135 and 138.9161 and it is about 2.8%
+#define DEFAULT_AXIS_STEPS_PER_UNIT   {64, 64, 64, 2*94.49, 138.92}
 #define DEFAULT_MAX_FEEDRATE          {500, 500, 500, 500, 25}    // (mm/sec)
 #define DEFAULT_MAX_ACCELERATION      {1000,1000,1000,1000,9000}    // X, Y, Z, E maximum start speed for accelerated moves. E default values are good for skeinforge 40+, for older versions raise them a lot.
 
