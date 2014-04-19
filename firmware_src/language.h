@@ -41,8 +41,8 @@
 
 #ifndef GIT_BRANCH
   #define GIT_TAG "v0.12"
-  #define GIT_BRANCH "hotfix"
-  #define GIT_PREV_HASH "55e32e4"
+  #define GIT_BRANCH "develop"
+  #define GIT_PREV_HASH "91625c0"
 #endif
 
 #define STRINGIFY_(n) #n

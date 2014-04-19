@@ -203,6 +203,10 @@
 // SKYFORGE
      #define DEFAULT_Kp 30.79
      #define DEFAULT_Ki 4.12
+     
+// Results for Nozzle setup without high temp adhesive 14-4-9T14:20Z-7
+// 4 Cycles: Kp=11.56, Ki=0.67, Kd=50.00, 8 Cycles: Kp 12.02, Ki=0.70, Kd=51.59
+
      #define DEFAULT_Kd 57.51
 
 // Makergear
